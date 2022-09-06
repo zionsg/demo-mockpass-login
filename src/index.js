@@ -18,7 +18,7 @@ process.on('uncaughtException', (err) => {
 
 // Import modules
 const express = require('express');
-const router = require('./routes.js');
+const router = require(process.env.DEMO_ROOT + 'src/routes.js');
 
 // Express app
 let app = express(); // Express app created outside init() for module exports

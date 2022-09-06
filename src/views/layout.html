@@ -14,21 +14,21 @@
     <div class="container">
       <h2>Demo MockPass Login</h2>
 
-      {{#is_page_login}}
+      {{#is_login}}
         <p><a href="{{{singpass_redirect_url}}}">Login using SingPass website</a></p>
         <p><a href="{{{corppass_redirect_url}}}">Login using CorpPass website</a></p>
-      {{/is_page_login}}
+      {{/is_login}}
 
-      {{^is_page_login}}
+      {{^is_login}}
         <p>
-          Welcome Back, {{username}}!
-          {{#uen}}
-            <br>Organization: {{uen}}
-          {{/uen}}
+          Welcome Back, {{user.username}}!
+          {{#user.uen}}
+            <br>Organization: {{user.uen}}
+          {{/user.uen}}
         </p>
 
         <p><a href="/demo/login">&lt; Back to Login Page</a></p>
-      {{/is_page_login}}
+      {{/is_login}}
     </div>
 
     <script src="/public/js/layout.js"></script>

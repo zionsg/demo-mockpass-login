@@ -3,6 +3,7 @@ const SPCPAuthClient = require('@opengovsg/spcp-auth-client');
 const cookieParser = require('cookie-parser');
 const express = require('express');
 const fs = require('fs');
+const helper = require(process.env.DEMO_ROOT + 'src/helper.js');
 const mustache = require('mustache');
 const path = require('path');
 
@@ -45,7 +46,7 @@ module.exports = (function () {
 
     // Verify if session has been authenticated with our JWT
     let isAuthenticated = function (req, res, next) {
-        // data =  { uen: '<UEN of organization>', iat: 1662446579, exp: 1676846579 }
+        // data = <whatever was put in the JWT>
         singpassClient.verifyJWT(req.cookies?.['connect.sid'], (err, data) => {
             if (err) {
                 res.status(400).send('Unauthorized');
@@ -71,7 +72,7 @@ module.exports = (function () {
         let html = mustache.render(
             layoutTemplate,
             {
-                is_page_login: true,
+                is_login: true,
                 singpass_redirect_url: singpassClient.createRedirectURL(postLoginPage),
                 corppass_redirect_url: corppassClient.createRedirectURL(postLoginPage),
             }
@@ -85,8 +86,7 @@ module.exports = (function () {
         let html = mustache.render(
             layoutTemplate,
             {
-                uen: req?.user?.uen,
-                username: req?.user?.username,
+                user: req?.user,
             }
         );
 
@@ -140,8 +140,8 @@ module.exports = (function () {
         let relayState = req.query.RelayState;
         let cookieOptions = { httpOnly: true };
 
-        // data = { attributes: { '<UEN of organization>': '<payload>', relayState: '<postLoginPage>' }
-        corppassClient.getAttributes(samlArt, relayState, (err, data) => {
+        // data = { attributes: { '<UEN of organization>': '<Base64 encoded XML info>', relayState: '<postLoginPage>' }
+        corppassClient.getAttributes(samlArt, relayState, async (err, data) => {
             if (err) {
                 // Indicate through cookies or headers that an error has occurred
                 console.error(err);
@@ -150,12 +150,15 @@ module.exports = (function () {
                 let relayState = data.relayState;
                 let attributes = data.attributes;
                 let uen = Object.keys(attributes)?.[0];
+                let info = await helper.xmlToJson(attributes[uen], true);
+                let username = info?.UserInfo?.CPUID?.[0];
 
                 // Embed a session cookie or pass back some Authorization bearer token
                 let jwt = corppassClient.createJWT(
                     {
                         is_corppass: true,
                         uen: uen,
+                        username: username,
                     },
                     4 * 60 * 60 * 1000
                 );
