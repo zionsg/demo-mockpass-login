@@ -1,0 +1,142 @@
+{
+  "name": "demo-mockpass-login",
+  "version": "0.1.0",
+  "description": "Website to demo SingPass/CorpPass login using MockPass server",
+  "main": "src/index.js",
+  "scripts": {
+    "//": [
+      "nodemon not in devDependencies cos may be used in docker-compose.override.yml.",
+      "postinstall script required as Dockerfile in mockpass directory needs package-lock.json for npm ci to work."
+    ],
+    "postinstall": "if [ \"${NODE_ENV}\" != \"production\" ]; then cd ./node_modules/@opengovsg/mockpass && npm install; fi",
+    "lint": "eslint '**/*.js' --ignore-pattern 'custom/' --ignore-pattern 'docs/' --ignore-pattern 'node_modules/' --ignore-pattern 'public/vendor/' --ignore-pattern 'tests/' --ignore-pattern 'tmp/' --ignore-pattern 'vendor/' --ignore-pattern '*.min.js'",
+    "dev": "nodemon --verbose --ext css,js,html --watch public --watch src --legacy-watch src/index.js",
+    "start": "docker-compose up",
+    "start:reset": "DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain docker-compose build --no-cache && docker-compose up",
+    "stop": "docker-compose down"
+  },
+  "dependencies": {
+    "@opengovsg/mockpass": "^2.9.2",
+    "@opengovsg/spcp-auth-client": "^1.4.17",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.0.2",
+    "express": "^4.18.1",
+    "nodemon": "^2.0.19"
+  },
+  "devDependencies": {
+    "eslint": "^8.23.0"
+  },
+  "eslintConfig": {
+    "env": {
+      "es6": true,
+      "node": true,
+      "browser": true
+    },
+    "globals": {
+      "Atomics": "readonly",
+      "Buffer": "readonly",
+      "SharedArrayBuffer": "readonly",
+      "__dirname": true,
+      "__filename": true,
+      "exports": true,
+      "global": true,
+      "module": false,
+      "process": false,
+      "require": false
+    },
+    "parserOptions": {
+      "ecmaVersion": 2020,
+      "ecmaFeatures": {
+        "globalReturn": true
+      }
+    },
+    "extends": "eslint:recommended",
+    "rules": {
+      "no-async-promise-executor": "off",
+      "no-console": "error",
+      "no-inner-declarations": "off",
+      "no-tabs": "error",
+      "no-trailing-spaces": "error",
+      "no-unused-vars": "off",
+      "no-useless-escape": "off",
+      "no-param-reassign": [
+        "off",
+        {
+          "props": true
+        }
+      ],
+      "default-case": "error",
+      "brace-style": [
+        "error",
+        "1tbs"
+      ],
+      "indent": [
+        "error",
+        4,
+        {
+          "SwitchCase": 1
+        }
+      ],
+      "linebreak-style": [
+        "error",
+        "unix"
+      ],
+      "max-len": [
+        "error",
+        {
+          "code": 120,
+          "ignoreComments": true,
+          "ignoreStrings": true
+        }
+      ],
+      "one-var": [
+        "error",
+        "never"
+      ],
+      "operator-linebreak": [
+        "error",
+        "before",
+        {
+          "overrides": {
+            "=": "after",
+            "+=": "after"
+          }
+        }
+      ],
+      "quotes": [
+        "error",
+        "single",
+        {
+          "avoidEscape": true,
+          "allowTemplateLiterals": false
+        }
+      ],
+      "semi": [
+        "error",
+        "always"
+      ],
+      "space-before-blocks": [
+        "error",
+        "always"
+      ],
+      "space-before-function-paren": [
+        "error",
+        {
+          "anonymous": "always",
+          "named": "never",
+          "asyncArrow": "always"
+        }
+      ]
+    },
+    "overrides": [
+      {
+        "files": [
+          "tests/**/*.js"
+        ],
+        "rules": {
+          "no-restricted-syntax": "off"
+        }
+      }
+    ]
+  }
+}
