@@ -78,6 +78,9 @@ of the repository. Shell commands are all run from the root of the repository.
                   source: /mnt/c/Users/Me/localhost/www/demo-mockpass-login/public/css
                   target: /var/lib/app/public/css
                 - type: bind
+                  source: /mnt/c/ZION/localhost/www/demo-mockpass-login/public/images
+                  target: /var/lib/app/public/images
+                - type: bind
                   source: /mnt/c/Users/Me/localhost/www/demo-mockpass-login/public/js
                   target: /var/lib/app/public/js
               # This command uses Nodemon which is listed as a production dependency

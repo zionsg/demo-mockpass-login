@@ -3,20 +3,26 @@ const SPCPAuthClient = require('@opengovsg/spcp-auth-client');
 const cookieParser = require('cookie-parser');
 const express = require('express');
 const fs = require('fs');
+const mustache = require('mustache');
 const path = require('path');
 
 /**
  * Routes for entire application
+ *
+ * Adapted from sample code at https://github.com/opengovsg/spcp-auth-client and https://github.com/opengovsg/mockpass
  *
  * @returns {function(express.Router): void}
  */
 module.exports = (function () {
     const router = express.Router();
 
+    let layoutTemplate = fs.readFileSync(process.env.DEMO_ROOT + 'src/views/layout.html', 'utf8');
+    let postLoginPage = '/demo/dashboard';
+
     // Init auth client for SingPass/CorpPass
     // idpLoginURL and idpEndpoint as per https://github.com/opengovsg/mockpass
     let certPath = process.env.DEMO_ROOT + 'node_modules/@opengovsg/mockpass/static/certs/';
-    let client = new SPCPAuthClient({
+    let singpassClient = new SPCPAuthClient({
         partnerEntityId: 'partnerEntityId',
         idpLoginURL: `${process.env.DEMO_MOCKPASS_BROWSER_BASEURL}/singpass/logininitial`,
         idpEndpoint: `${process.env.DEMO_MOCKPASS_API_BASEURL}/singpass/soap`,
@@ -26,14 +32,28 @@ module.exports = (function () {
         appEncryptionKey: fs.readFileSync(`${certPath}/key.pem`),
         spcpCert: fs.readFileSync(`${certPath}/spcp.crt`),
     });
+    let corppassClient = new SPCPAuthClient({
+        partnerEntityId: 'partnerEntityId',
+        idpLoginURL: `${process.env.DEMO_MOCKPASS_BROWSER_BASEURL}/corppass/logininitial`,
+        idpEndpoint: `${process.env.DEMO_MOCKPASS_API_BASEURL}/corppass/soap`,
+        esrvcID: 'esrvcID',
+        appCert: fs.readFileSync(`${certPath}/key.pub`),
+        appKey: fs.readFileSync(`${certPath}/key.pem`),
+        appEncryptionKey: fs.readFileSync(`${certPath}/key.pem`),
+        spcpCert: fs.readFileSync(`${certPath}/spcp.crt`),
+    });
 
     // Verify if session has been authenticated with our JWT
     let isAuthenticated = function (req, res, next) {
-        client.verifyJWT(req.cookies?.['connect.sid'], (err, data) => {
+        // data =  { uen: '<UEN of organization>', iat: 1662446579, exp: 1676846579 }
+        singpassClient.verifyJWT(req.cookies?.['connect.sid'], (err, data) => {
             if (err) {
                 res.status(400).send('Unauthorized');
             } else {
-                req.username = data.username;
+                req.user = {
+                    uen: data.uen,
+                    username: data.username,
+                };
                 next();
             }
         });
@@ -42,33 +62,48 @@ module.exports = (function () {
     // Needed for request.cookies to work
     router.use(cookieParser());
 
-    // Healthcheck
-    router.get('/healthcheck', (req, res) => {
-        res.status(200).send('Hello World!');
-    });
-
     // Serve static assets in public folder such as CSS, JS and images, e.g.
     // <script src="/public/js/test.js"> will be served from public/js/test.js.
     router.use('/public', express.static(path.join(process.env.DEMO_ROOT, 'public')));
 
     // Login Page - if a user is logging in, redirect to SingPass/CorpPass
     router.get('/demo/login', (req, res) => {
-        let postLoginPage = '/demo/dashboard';
-        let redirectUrl = client.createRedirectURL(postLoginPage);
-        res.status(200).send(`
-            <a href="${redirectUrl}">Login using SingPass</a>
-        `);
+        let html = mustache.render(
+            layoutTemplate,
+            {
+                is_page_login: true,
+                singpass_redirect_url: singpassClient.createRedirectURL(postLoginPage),
+                corppass_redirect_url: corppassClient.createRedirectURL(postLoginPage),
+            }
+        );
+
+        res.status(200).send(html);
     });
 
-    // SingPass/CorpPass would eventually pass control back
-    // by GET-ing a pre-agreed endpoint, proceed to obtain the user's
+    // Dashboard Page
+    router.get('/demo/dashboard', isAuthenticated, (req, res, next) => {
+        let html = mustache.render(
+            layoutTemplate,
+            {
+                uen: req?.user?.uen,
+                username: req?.user?.username,
+            }
+        );
+
+        res.status(200).send(html);
+    });
+
+    // Full URL for this route is the value for SINGPASS_ASSERT_ENDPOINT env var in MockPass
+    // SingPass would eventually pass control back by GET-ing a pre-agreed endpoint, proceed to obtain the user's
     // identity using out-of-band (OOB) authentication
-    router.use('/demo/singpass/assert', (req, res) => { // full URL for this is value for SINGPASS_ASSERT_ENDPOINT in MockPass
+    router.use('/demo/singpass/assert', (req, res) => {
+        // req.query = { SAMLart: '', RelayState: '<postLoginPage>' }
         let samlArt = req.query.SAMLart;
         let relayState = req.query.RelayState;
         let cookieOptions = { httpOnly: true };
 
-        client.getAttributes(samlArt, relayState, (err, data) => {
+        // data = { attributes: { UserName: '<NRIC of user>', relayState: '<postLoginPage>' }
+        singpassClient.getAttributes(samlArt, relayState, (err, data) => {
             if (err) {
                 // Indicate through cookies or headers that an error has occurred
                 console.error(err);
@@ -82,8 +117,9 @@ module.exports = (function () {
                 let username = attributes.UserName;
 
                 // Embed a session cookie or pass back some Authorization bearer token
-                let jwt = client.createJWT(
+                let jwt = singpassClient.createJWT(
                     {
+                        is_singpass: true,
                         username: username,
                     },
                     4 * 60 * 60 * 1000
@@ -95,9 +131,44 @@ module.exports = (function () {
         });
     });
 
-    // Dashboard Page
-    router.get('/demo/dashboard', isAuthenticated, (req, res, next) => {
-        res.status(200).send(`Welcome Back, ${req.username}!`);
+    // Full URL for this route is the value for CORPPASS_ASSERT_ENDPOINT env var in MockPass
+    // CorpPass would eventually pass control back by GET-ing a pre-agreed endpoint, proceed to obtain the user's
+    // identity using out-of-band (OOB) authentication
+    router.use('/demo/corppass/assert', (req, res) => {
+        // req.query = { SAMLart: '', RelayState: '<postLoginPage>' }
+        let samlArt = req.query.SAMLart;
+        let relayState = req.query.RelayState;
+        let cookieOptions = { httpOnly: true };
+
+        // data = { attributes: { '<UEN of organization>': '<payload>', relayState: '<postLoginPage>' }
+        corppassClient.getAttributes(samlArt, relayState, (err, data) => {
+            if (err) {
+                // Indicate through cookies or headers that an error has occurred
+                console.error(err);
+                res.cookie('login.error', err.message, cookieOptions);
+            } else {
+                let relayState = data.relayState;
+                let attributes = data.attributes;
+                let uen = Object.keys(attributes)?.[0];
+
+                // Embed a session cookie or pass back some Authorization bearer token
+                let jwt = corppassClient.createJWT(
+                    {
+                        is_corppass: true,
+                        uen: uen,
+                    },
+                    4 * 60 * 60 * 1000
+                );
+                res.cookie('connect.sid', jwt, cookieOptions);
+            }
+
+            res.redirect(relayState);
+        });
+    });
+
+    // Healthcheck
+    router.get('/healthcheck', (req, res) => {
+        res.status(200).send('Hello World!');
     });
 
     // Home Page - go to Login Page if user visits root

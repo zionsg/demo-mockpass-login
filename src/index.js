@@ -1,7 +1,5 @@
 /**
  * Entrypoint for entire application
- *
- * Adapted from sample code at https://github.com/opengovsg/spcp-auth-client and https://github.com/opengovsg/mockpass
  */
 
 'use strict';

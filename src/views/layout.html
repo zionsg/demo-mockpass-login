@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo MockPass Login</title>
+
+    <link rel="icon" type="image/x-icon" href="/public/images/favicon.png">
+    <link rel="stylesheet" type="text/css" href="/public/css/layout.css">
+  </head>
+
+  {{! This is a Mustache.js comment. }}
+  <body>
+    <div class="container">
+      <h2>Demo MockPass Login</h2>
+
+      {{#is_page_login}}
+        <p><a href="{{{singpass_redirect_url}}}">Login using SingPass website</a></p>
+        <p><a href="{{{corppass_redirect_url}}}">Login using CorpPass website</a></p>
+      {{/is_page_login}}
+
+      {{^is_page_login}}
+        <p>
+          Welcome Back, {{username}}!
+          {{#uen}}
+            <br>Organization: {{uen}}
+          {{/uen}}
+        </p>
+
+        <p><a href="/demo/login">&lt; Back to Login Page</a></p>
+      {{/is_page_login}}
+    </div>
+
+    <script src="/public/js/layout.js"></script>
+  </body>
+</html>

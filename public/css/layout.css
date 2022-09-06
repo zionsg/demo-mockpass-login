@@ -30,3 +30,18 @@ body {
   margin: 0;
   padding: 0;
 }
+
+.container {
+  padding: 1rem;
+}
+/* CLOSE: Containers */
+
+
+/* BEGIN: Navigation */
+a {
+  color: blue;
+}
+a:hover {
+  color: magenta;
+}
+/* CLOSE: Navigation */
