@@ -15,3 +15,6 @@ Thumbs.db
 VERSION.txt
 desktop.ini
 docker-compose.override.yml
+
+# Allow vendor folder in public folder. Files from 3rd party libraries such as Bootstrap are placed in public/vendor.
+!public/vendor/
