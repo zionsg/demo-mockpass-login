@@ -87,7 +87,7 @@ of the repository. Shell commands are all run from the root of the repository.
           ```
 
     + Run `npm run start` to start the Docker containers for the application
-      and MockPass server. May need to run as as `sudo` depending on host
+      and MockPass server. May need to run as `sudo` depending on host
       machine, due to the use of Docker Compose.
     + Run `npm run stop` to stop the Docker container or just press `Ctrl+C`.
       However, the former should be used as it will properly shut down the
