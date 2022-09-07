@@ -16,5 +16,8 @@ VERSION.txt
 desktop.ini
 docker-compose.override.yml
 
-# Allow vendor folder in public folder. Files from 3rd party libraries such as Bootstrap are placed in public/vendor.
-!public/vendor/
+# Allow vendor folder in public folder but do not commit files inside except .gitkeep (cos cannot commit empty folder)
+# Files from 3rd party libraries such as Bootstrap are placed in public/vendor and not committed but the folder needs
+# to exist for copying in Dockerfile
+public/vendor/*
+!public/vendor/.gitkeep

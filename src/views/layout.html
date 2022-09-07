@@ -17,6 +17,14 @@
       {{#is_login}}
         <p><a href="{{{singpass_redirect_url}}}">Login using SingPass website</a></p>
         <p><a href="{{{corppass_redirect_url}}}">Login using CorpPass website</a></p>
+
+        <p>
+          <div id="singpass-qr"></div>
+        </p>
+
+        <p>
+          <div id="corppass-qr"></div>
+        </p>
       {{/is_login}}
 
       {{^is_login}}
@@ -31,7 +39,8 @@
       {{/is_login}}
     </div>
 
-    <script src="/public/vendor/ndi_embedded_auth.js"></script>
-    <script src="/public/js/layout.js"></script>
+    {{! The NDI script is from https://stg-id.singpass.gov.sg/docs/embedded-auth/js - cannot be self-hosted }}
+    <script src="https://stg-id.singpass.gov.sg/static/ndi_embedded_auth.js"></script>
+    <script src="/public/js/layout.js" data-nonce="{{nonce}}"></script>
   </body>
 </html>

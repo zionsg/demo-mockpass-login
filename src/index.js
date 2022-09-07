@@ -22,6 +22,7 @@ const router = require(process.env.DEMO_ROOT + 'src/routes.js');
 
 // Express app
 let app = express(); // Express app created outside init() for module exports
+app.disable('x-powered-by'); // do not set "X-Powered-By: Express" header
 app.use('/', router);
 
 // Initialization
