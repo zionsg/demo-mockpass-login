@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@opengovsg/mockpass": "^2.9.2",
+    "@opengovsg/myinfo-gov-client": "^4.0.1",
     "@opengovsg/spcp-auth-client": "^1.4.17",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",

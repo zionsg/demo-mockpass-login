@@ -18,6 +18,7 @@ services:
       context: ./node_modules/@opengovsg/mockpass
       dockerfile: Dockerfile # use this file inside MockPass directory
     ports: # publish ports - external:internal
+      # Use same port for external and internal
       - ${MOCKPASS_PORT}:${MOCKPASS_PORT}
     env_file:
       - .env

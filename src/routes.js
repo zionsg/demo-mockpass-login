@@ -1,11 +1,12 @@
 // Import modules
-const SPCPAuthClient = require('@opengovsg/spcp-auth-client');
+const CorpPassClient = require(process.env.DEMO_ROOT + 'src/client/CorpPassClient.js');
+const MyInfoPersonalClient = require(process.env.DEMO_ROOT + 'src/client/MyInfoPersonalClient.js');
+const SingPassClient = require(process.env.DEMO_ROOT + 'src/client/SingPassClient.js');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const express = require('express');
 const fs = require('fs');
 const helper = require(process.env.DEMO_ROOT + 'src/helper.js');
-const path = require('path');
 
 /**
  * Routes for entire application
@@ -19,35 +20,15 @@ module.exports = (function () {
 
     let postLoginPage = '/demo/dashboard';
     let layoutTemplate = fs.readFileSync(process.env.DEMO_ROOT + 'src/views/layout.html', 'utf8');
-
-    // Init auth client for SingPass/CorpPass
-    // idpLoginURL and idpEndpoint as per https://github.com/opengovsg/mockpass
-    let certPath = process.env.DEMO_ROOT + 'node_modules/@opengovsg/mockpass/static/certs/';
-    let singpassClient = new SPCPAuthClient({
-        partnerEntityId: 'partnerEntityId',
-        idpLoginURL: `${process.env.DEMO_MOCKPASS_BROWSER_BASEURL}/singpass/logininitial`,
-        idpEndpoint: `${process.env.DEMO_MOCKPASS_API_BASEURL}/singpass/soap`,
-        esrvcID: 'esrvcID',
-        appCert: fs.readFileSync(`${certPath}/key.pub`),
-        appKey: fs.readFileSync(`${certPath}/key.pem`),
-        appEncryptionKey: fs.readFileSync(`${certPath}/key.pem`),
-        spcpCert: fs.readFileSync(`${certPath}/spcp.crt`),
-    });
-    let corppassClient = new SPCPAuthClient({
-        partnerEntityId: 'partnerEntityId',
-        idpLoginURL: `${process.env.DEMO_MOCKPASS_BROWSER_BASEURL}/corppass/logininitial`,
-        idpEndpoint: `${process.env.DEMO_MOCKPASS_API_BASEURL}/corppass/soap`,
-        esrvcID: 'esrvcID',
-        appCert: fs.readFileSync(`${certPath}/key.pub`),
-        appKey: fs.readFileSync(`${certPath}/key.pem`),
-        appEncryptionKey: fs.readFileSync(`${certPath}/key.pem`),
-        spcpCert: fs.readFileSync(`${certPath}/spcp.crt`),
-    });
+    let singPassClient = new SingPassClient();
+    let corpPassClient = new CorpPassClient();
+    let myInfoPersonalClient = new MyInfoPersonalClient();
+    let myInfoPersonalRequestedAttributes = ['name', 'sex', 'race'];
 
     // Verify if session has been authenticated with our JWT
     let isAuthenticated = function (req, res, next) {
         // data = <whatever was put in the JWT>
-        singpassClient.verifyJWT(req.cookies?.['connect.sid'], (err, data) => {
+        singPassClient.verifyJWT(req.cookies?.['connect.sid'], (err, data) => {
             if (err) {
                 res.status(400).send('Unauthorized');
             } else {
@@ -122,14 +103,19 @@ module.exports = (function () {
 
     // Serve static assets in public folder such as CSS, JS and images, e.g.
     // <script src="/public/js/test.js"> will be served from public/js/test.js.
-    router.use('/public', express.static(path.join(process.env.DEMO_ROOT, 'public')));
+    router.use('/public', express.static(process.env.DEMO_ROOT + 'public'));
 
     // Login Page - if a user is logging in, redirect to SingPass/CorpPass
-    router.get('/demo/login', (req, res) => {
+    router.get('/demo/login', (req, res, next) => {
         let html = helper.render(req, layoutTemplate, {
             is_login: true,
-            singpass_redirect_url: singpassClient.createRedirectURL(postLoginPage),
-            corppass_redirect_url: corppassClient.createRedirectURL(postLoginPage),
+            singpass_redirect_url: singPassClient.createRedirectURL(postLoginPage),
+            corppass_redirect_url: corpPassClient.createRedirectURL(postLoginPage),
+            myinfo_personal_redirect_url: myInfoPersonalClient.createRedirectURL({
+                purpose: 'Info for Demo MockPass Login application',
+                requestedAttributes: myInfoPersonalRequestedAttributes,
+                relayState: 'myInfoRelayState',
+            }),
         });
 
         res.status(200).send(html);
@@ -144,14 +130,14 @@ module.exports = (function () {
     // Full URL for this route is the value for SINGPASS_ASSERT_ENDPOINT env var in MockPass
     // SingPass would eventually pass control back by GET-ing a pre-agreed endpoint, proceed to obtain the user's
     // identity using out-of-band (OOB) authentication
-    router.use('/demo/singpass/assert', (req, res) => {
+    router.use('/demo/singpass/assert', (req, res, next) => {
         // req.query = { SAMLart: '', RelayState: '<postLoginPage>' }
         let samlArt = req.query.SAMLart;
         let relayState = req.query.RelayState;
         let cookieOptions = { httpOnly: true };
 
         // data = { attributes: { UserName: '<NRIC of user>', relayState: '<postLoginPage>' }
-        singpassClient.getAttributes(samlArt, relayState, (err, data) => {
+        singPassClient.getAttributes(samlArt, relayState, (err, data) => {
             if (err) {
                 // Indicate through cookies or headers that an error has occurred
                 console.error(err);
@@ -165,7 +151,7 @@ module.exports = (function () {
                 let username = attributes.UserName;
 
                 // Embed a session cookie or pass back some Authorization bearer token
-                let jwt = singpassClient.createJWT(
+                let jwt = singPassClient.createJWT(
                     {
                         is_singpass: true,
                         username: username,
@@ -182,14 +168,14 @@ module.exports = (function () {
     // Full URL for this route is the value for CORPPASS_ASSERT_ENDPOINT env var in MockPass
     // CorpPass would eventually pass control back by GET-ing a pre-agreed endpoint, proceed to obtain the user's
     // identity using out-of-band (OOB) authentication
-    router.use('/demo/corppass/assert', (req, res) => {
+    router.use('/demo/corppass/assert', (req, res, next) => {
         // req.query = { SAMLart: '', RelayState: '<postLoginPage>' }
         let samlArt = req.query.SAMLart;
         let relayState = req.query.RelayState;
         let cookieOptions = { httpOnly: true };
 
         // data = { attributes: { '<UEN of organization>': '<Base64 encoded XML info>', relayState: '<postLoginPage>' }
-        corppassClient.getAttributes(samlArt, relayState, async (err, data) => {
+        corpPassClient.getAttributes(samlArt, relayState, async (err, data) => {
             if (err) {
                 // Indicate through cookies or headers that an error has occurred
                 console.error(err);
@@ -202,7 +188,7 @@ module.exports = (function () {
                 let username = info?.UserInfo?.CPUID?.[0];
 
                 // Embed a session cookie or pass back some Authorization bearer token
-                let jwt = corppassClient.createJWT(
+                let jwt = corpPassClient.createJWT(
                     {
                         is_corppass: true,
                         uen: uen,
@@ -217,13 +203,49 @@ module.exports = (function () {
         });
     });
 
+    // Full URL for this route is the value for DEMO_MYINFO_PERSONAL_ASSERT_ENDPOINT env var in .env
+    // MyInfo would eventually pass control back by GET-ing a pre-agreed endpoint, proceed to obtain the user's
+    // identity using out-of-band (OOB) authentication
+    router.use('/demo/myinfo-personal/assert', async (req, res, next) => {
+        // req.query = {
+        //     code: '70ad6940-2e8e-11ed-bd49-abebb0a8526f',
+        //     state: 'myInfoRelayState',
+        //     scope: 'name sex race',
+        //     client_id: 'clientId',
+        //     iss: 'http://localhost:5156/consent/oauth2/consent/myinfo-com'
+        // }
+        let code = req.query.code;
+
+        let accessToken = '';
+        let result = null;
+        try {
+            accessToken = await myInfoPersonalClient.getAccessToken(code);
+        } catch (err) {
+            console.error('accessToken', err);
+            accessToken = '';
+        }
+
+        try {
+            result = await myInfoPersonalClient.getPerson(accessToken, myInfoPersonalRequestedAttributes);
+        } catch (err) {
+            console.error(err);
+            result = null;
+        }
+
+        let html = helper.render(req, layoutTemplate, {
+            info: result?.data,
+        });
+
+        res.status(200).send(html);
+    });
+
     // Healthcheck
-    router.get('/healthcheck', (req, res) => {
+    router.get('/healthcheck', (req, res, next) => {
         res.status(200).send('Hello World!');
     });
 
     // Home Page - go to Login Page if user visits root
-    router.get('/', (req, res) => {
+    router.get('/', (req, res, next) => {
         res.redirect('/demo/login');
     });
 
