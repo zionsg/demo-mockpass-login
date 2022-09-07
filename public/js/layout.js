@@ -11,6 +11,9 @@
     /**
      * Initialize QR codes
      *
+     * @todo Currently getting CORS errors when running this script, probably need to register
+     *     domain with SingPass in order to whitelist it.
+     *
      * @private
      * @link Adapted from https://stg-id.singpass.gov.sg/docs/embedded-auth/js#_sample_html_with_ndi_embedded_auth_js
      * @returns {void}
@@ -46,9 +49,9 @@
                 }
             );
 
-            console.log('initAuthSession: ', initAuthSessionResponse);
+            console.log('initAuthSession', initAuthSessionResponse);
         } catch (err) {
-            console.error(err);
+            console.error('initAuthSession', err);
         }
     }
 })(document.currentScript); // pass in argument to ensure different instance each time

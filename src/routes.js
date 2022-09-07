@@ -110,13 +110,11 @@ module.exports = (function () {
     }));
 
     // CORS middleware must be set after body parsing middleware
-    router.options('*', cors({ // include before other routes to enable CORS preflight
-        optionsSuccessStatus: 200,
-    }));
-    router.use('/', cors({ // for Cross-origin Resource Sharing (CORS)
+    router.use('/', cors({
         origin: true,
-        methods: ['GET', 'POST', 'OPTIONS'],
+        methods: ['GET', 'POST', 'HEAD', 'OPTIONS'],
         credentials: true,
+        optionsSuccessStatus: 200,
     }));
 
     // Needed for request.cookies to work
