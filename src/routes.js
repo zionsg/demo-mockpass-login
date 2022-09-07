@@ -23,7 +23,7 @@ module.exports = (function () {
     let singPassClient = new SingPassClient();
     let corpPassClient = new CorpPassClient();
     let myInfoPersonalClient = new MyInfoPersonalClient();
-    let myInfoPersonalRequestedAttributes = ['name', 'sex', 'race'];
+    let myInfoPersonalRequestedAttributes = ['name', 'sex', 'mobileno'];
 
     // Verify if session has been authenticated with our JWT
     let isAuthenticated = function (req, res, next) {
@@ -228,7 +228,7 @@ module.exports = (function () {
         try {
             result = await myInfoPersonalClient.getPerson(accessToken, myInfoPersonalRequestedAttributes);
         } catch (err) {
-            console.error(err);
+            console.error('getPerson', err);
             result = null;
         }
 
