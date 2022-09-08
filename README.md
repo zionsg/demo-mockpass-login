@@ -12,12 +12,14 @@ of the repository. Shell commands are all run from the root of the repository.
 - [Installation](#installation)
 
 ## References
+- [MockPass - a mock SingPass/CorpPass server for testing in development](https://medium.com/open-government-products/mockpass-a-mock-singpass-corppass-server-for-testing-in-development-a583193c898c)
 - [SingPass Developer Guide](https://api.singpass.gov.sg/developers)
     + [Displaying the SingPass QR](https://api.singpass.gov.sg/library/login/developers/tutorial1)
 - [CorpPass](https://www.developer.tech.gov.sg/products/categories/digital-identity/corppass/overview.html)
-- [Node.js library for SingPass and CorpPass](https://github.com/opengovsg/spcp-auth-client)
-- [MockPass - a mock SingPass/CorpPass server for testing in development](https://medium.com/open-government-products/mockpass-a-mock-singpass-corppass-server-for-testing-in-development-a583193c898c)
-    + [A mock SingPass/CorpPass/MyInfo server for dev purposes](https://github.com/opengovsg/mockpass)
+- Open-source Node.js libraries by [Open Government Products](https://www.open.gov.sg/)
+    + [MockPass server](https://github.com/opengovsg/mockpass)
+    + [SingPass/CorpPass client](https://github.com/opengovsg/spcp-auth-client)
+    + [MyInfo client](https://github.com/opengovsg/myinfo-gov-client)
 
 ## Requirements
 - [Docker Engine](https://docs.docker.com/engine/release-notes/) >= 20.10.7

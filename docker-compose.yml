@@ -1,5 +1,13 @@
 ##
 # Docker Compose config file
+#
+# For host.docker.internal to work on Windows, C:\Windows\System32\drivers\etc\hosts may need the
+# following entries (other IPs may not work if you connect to different networks, see
+# https://stackoverflow.com/q/24319662 and
+# https://medium.com/@TimvanBaarsen/how-to-connect-to-the-docker-host-from-inside-a-docker-container-112b4c71bc66
+# for more info):
+#   127.0.0.1 host.docker.internal
+#   127.0.0.1 gateway.docker.internal
 ##
 
 version: "3.6" # this is the version for the compose file config, not the app
