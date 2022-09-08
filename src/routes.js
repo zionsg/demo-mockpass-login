@@ -226,7 +226,8 @@ module.exports = (function () {
         }
 
         try {
-            // @todo This throws "Signature verification failed" error cos getPerson() computes the
+            // @todo See https://github.com/opengovsg/mockpass/issues/430
+            // This throws "Signature verification failed" error cos getPerson() computes the
             // signature with sp_esvcId query param in the url while pki() in
             // https://github.com/opengovsg/mockpass/blob/master/lib/crypto/myinfo-signature.js
             // omits the sp_esvcId query param when returning baseString for /person endpoint,
