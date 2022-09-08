@@ -16,10 +16,12 @@ of the repository. Shell commands are all run from the root of the repository.
 - [SingPass Developer Guide](https://api.singpass.gov.sg/developers)
     + [Displaying the SingPass QR](https://api.singpass.gov.sg/library/login/developers/tutorial1)
 - [CorpPass](https://www.developer.tech.gov.sg/products/categories/digital-identity/corppass/overview.html)
-- Open-source Node.js libraries by [Open Government Products](https://www.open.gov.sg/)
+- Related open-source Node.js repositories
     + [MockPass server](https://github.com/opengovsg/mockpass)
     + [SingPass/CorpPass client](https://github.com/opengovsg/spcp-auth-client)
     + [MyInfo client](https://github.com/opengovsg/myinfo-gov-client)
+    + [MyInfo Demo App](https://github.com/ndi-trusted-data/myinfo-demo-app)
+    + [MyInfo Business Demo App](https://github.com/ndi-trusted-data/myinfobiz-demo-app)
 
 ## Requirements
 - [Docker Engine](https://docs.docker.com/engine/release-notes/) >= 20.10.7
@@ -76,6 +78,9 @@ of the repository. Shell commands are all run from the root of the repository.
                 # Cannot use the shortform "- ./src/:/var/lib/app/src" else Windows permission error
                 # Use the node_modules & public/vendor folders inside container not host
                 # cos packages may use Linux native libraries and not work on host platform
+                - type: bind
+                  source: /mnt/c/ZION/localhost/www/demo-mockpass-login/node_modules/@opengovsg # for debugging purposes
+                  target: /var/lib/app/node_modules/@opengovsg
                 - type: bind
                   source: /mnt/c/Users/Me/localhost/www/demo-mockpass-login/src
                   target: /var/lib/app/src

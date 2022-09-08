@@ -5,12 +5,13 @@
   "main": "src/index.js",
   "scripts": {
     "//": [
+      "postinstall script required as Dockerfile in mockpass directory needs package-lock.json for npm ci to work.",
       "nodemon not in devDependencies cos may be used in docker-compose.override.yml.",
-      "postinstall script required as Dockerfile in mockpass directory needs package-lock.json for npm ci to work."
+      "nodemon set to watch node_modules/@opengovsg to facilitate debugging of libraries in there."
     ],
     "postinstall": "if [ \"${NODE_ENV}\" != \"production\" ]; then cd ./node_modules/@opengovsg/mockpass && npm install; fi",
     "lint": "eslint '**/*.js' --ignore-pattern 'custom/' --ignore-pattern 'docs/' --ignore-pattern 'node_modules/' --ignore-pattern 'public/vendor/' --ignore-pattern 'tests/' --ignore-pattern 'tmp/' --ignore-pattern 'vendor/' --ignore-pattern '*.min.js'",
-    "dev": "nodemon --verbose --ext css,js,html --watch public --watch src --legacy-watch src/index.js",
+    "dev": "nodemon --verbose --ext css,js,html --watch node_modules/@opengovsg --watch public --watch src --legacy-watch src/index.js",
     "start": "docker-compose up",
     "start:reset": "DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain docker-compose build --no-cache && docker-compose up",
     "stop": "docker-compose down"
