@@ -45,3 +45,10 @@ a:hover {
   color: magenta;
 }
 /* CLOSE: Navigation */
+
+
+/* BEGIN: Text */
+.text-center {
+  text-align: center;
+}
+/* CLOSE: Text */

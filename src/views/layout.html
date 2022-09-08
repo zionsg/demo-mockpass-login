@@ -18,11 +18,14 @@
         <p><a href="{{{singpass_redirect_url}}}">Login using SingPass website</a></p>
         <p><a href="{{{corppass_redirect_url}}}">Login using CorpPass website</a></p>
         <p>
-          <a href="{{{myinfo_personal_redirect_url}}}">Retrieve info using MyInfo Personal website to login</a>
+          <a href="{{{myinfo_personal_redirect_url}}}">Retrieve profile from MyInfo Personal</a>
           <br>(select user with "[MyInfo]" on MockPass website)
         </p>
 
         <p>
+          <div class="text-center"><i>
+            Unfortunately, QR generation only works if domain is registered with SingPass else CORS error
+          </i></div>
           <div id="singpass-qr"></div>
         </p>
 
