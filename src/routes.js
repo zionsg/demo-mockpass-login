@@ -226,6 +226,13 @@ module.exports = (function () {
         }
 
         try {
+            // @todo This throws "Signature verification failed" error cos getPerson() computes the
+            // signature with sp_esvcId query param in the url while pki() in
+            // https://github.com/opengovsg/mockpass/blob/master/lib/crypto/myinfo-signature.js
+            // omits the sp_esvcId query param when returning baseString for /person endpoint,
+            // causing verify() in
+            // https://github.com/opengovsg/mockpass/blob/master/lib/express/myinfo/controllers.js
+            // to use the wrong baseString when computing the signature
             result = await myInfoPersonalClient.getPerson(accessToken, myInfoPersonalRequestedAttributes);
         } catch (err) {
             console.error('getPerson', err);
