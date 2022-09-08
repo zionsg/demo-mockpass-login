@@ -73,13 +73,21 @@ of the repository. Shell commands are all run from the root of the repository.
           # docker-compose.override.yml in root of repository
           version: "3.6" # this is the version for the compose file config, not the app
           services:
+            mockpass-server:
+              # need to manually restart this container if code is changed locally cos modules alr loaded and
+              # require() is cached, i.e. docker restart mockpass-server
+              volumes:
+                - type: bind
+                  source: /mnt/c/Users/Me/localhost/www/demo-mockpass-login/node_modules/@opengovsg/mockpass/lib
+                  target: /usr/src/mockpass/lib
             demo-app:
               volumes:
                 # Cannot use the shortform "- ./src/:/var/lib/app/src" else Windows permission error
-                # Use the node_modules & public/vendor folders inside container not host
-                # cos packages may use Linux native libraries and not work on host platform
+                # Use the node_modules & public/vendor folders inside container not host cos packages may use
+                # Linux native libraries and not work on host platform (except opengovsg to allow changing of
+                # code to debug)
                 - type: bind
-                  source: /mnt/c/ZION/localhost/www/demo-mockpass-login/node_modules/@opengovsg # for debugging purposes
+                  source: /mnt/c/Users/Me/localhost/www/demo-mockpass-login/node_modules/@opengovsg
                   target: /var/lib/app/node_modules/@opengovsg
                 - type: bind
                   source: /mnt/c/Users/Me/localhost/www/demo-mockpass-login/src

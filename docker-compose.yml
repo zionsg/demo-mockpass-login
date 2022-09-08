@@ -22,6 +22,7 @@ networks:
 # See https://github.com/compose-spec/compose-spec/blob/master/spec.md#depends_on for depends_on conditions
 services:
   mockpass-server: # MockPass server
+    container_name: mockpass-server
     build:
       context: ./node_modules/@opengovsg/mockpass
       dockerfile: Dockerfile # use this file inside MockPass directory
@@ -36,10 +37,10 @@ services:
       - host.docker.internal:host-gateway
 
   demo-app: # demo application website
+    container_name: demo-app
     build:
       context: . # current directory
       dockerfile: Dockerfile # use this file inside current directory
-    container_name: demo-app
     ports: # publish ports - external:internal
       - ${DEMO_PORT_EXTERNAL}:${DEMO_PORT_INTERNAL}
     env_file:

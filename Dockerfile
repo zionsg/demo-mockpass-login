@@ -26,7 +26,7 @@ WORKDIR /var/lib/app
 # or Docker CLI to set environment variables for the container instead.
 COPY --chown=node:node public/ /var/lib/app/public/
 COPY --chown=node:node src/ /var/lib/app/src/
-COPY --chown=node:node package* /var/lib/app/
+COPY --chown=node:node nodemon.json package* /var/lib/app/
 
 # Install app dependencies. Note that devDependences in package.json are not installed.
 # Disabling progress yields 2x speed improvement - https://twitter.com/gavinjoyce/status/691773956144119808

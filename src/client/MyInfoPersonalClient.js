@@ -20,7 +20,7 @@ module.exports = (function (config) {
         redirectEndpoint: process.env.DEMO_MYINFO_PERSONAL_ASSERT_ENDPOINT,
         clientPrivateKey: fs.readFileSync(`${certPath}/key.pem`),
         myInfoPublicKey: fs.readFileSync(`${certPath}/spcp.crt`),
-        mode: 'dev', // Set to 'dev' to call dev endpoint, 'stg' to call stg endpoint, leave empty for prod
+        mode: '', // set 'dev' to call dev endpoint (no encryption), 'stg' to call stg endpoint, leave empty for prod
     });
 
     // Need to modify the base API URL to point to MockPass cos no way to specify when creating client
