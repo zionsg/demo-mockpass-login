@@ -1,6 +1,7 @@
 # Demo MockPass Login
 
-Website to demo SingPass/CorpPass login using MockPass server. This application
+Website to demo SingPass/CorpPass login and profile retrieval from
+MyInfo Personal/Business using MockPass server. This application
 will serve up a website as well as start up a MockPass server locally.
 
 Paths in all documentation, even those in subfolders, are relative to the root
