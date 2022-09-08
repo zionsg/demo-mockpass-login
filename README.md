@@ -67,7 +67,7 @@ of the repository. Shell commands are all run from the root of the repository.
       https://docs.docker.com/compose/extends for more info.
         * A common use case during local development would be to enable live
           reload inside the Docker container when changes are made to the source
-          code on a Windows host machine.
+          code on a Windows host machine, without rebuilding the Docker image.
 
           ```
           # docker-compose.override.yml in root of repository

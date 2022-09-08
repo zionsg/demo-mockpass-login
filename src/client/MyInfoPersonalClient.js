@@ -18,9 +18,14 @@ module.exports = (function (config) {
         clientSecret: process.env.DEMO_MYINFO_CLIENT_SECRET,
         singpassEserviceId: 'singpassEserviceId',
         redirectEndpoint: process.env.DEMO_MYINFO_PERSONAL_ASSERT_ENDPOINT,
+        // clientPrivateKey - key.pem's public key, key.pub, is used by serviceProvider.pubKey in
+        // https://github.com/opengovsg/mockpass/blob/master/index.js
         clientPrivateKey: fs.readFileSync(`${certPath}/key.pem`),
+        // myInfoPublicKey refers to MOCKPASS_PUBLIC_KEY in
+        // https://github.com/opengovsg/mockpass/blob/master/lib/express/myinfo/controllers.js
         myInfoPublicKey: fs.readFileSync(`${certPath}/spcp.crt`),
-        mode: '', // set 'dev' to call dev endpoint (no encryption), 'stg' to call stg endpoint, leave empty for prod
+        // set 'dev' to call dev endpoint (no encryption), 'stg' to call stg endpoint, leave empty for prod
+        mode: '', // set to prod so as to test encryption
     });
 
     // Need to modify the base API URL to point to MockPass cos no way to specify when creating client
