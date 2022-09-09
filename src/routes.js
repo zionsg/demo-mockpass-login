@@ -23,7 +23,7 @@ module.exports = (function () {
     let singPassClient = new SingPassClient();
     let corpPassClient = new CorpPassClient();
     let myInfoPersonalClient = new MyInfoPersonalClient();
-    let myInfoPersonalRequestedAttributes = ['name', 'sex', 'mobileno'];
+    let myInfoPersonalRequestedAttributes = ['name', 'email', 'mobileno'];
 
     // Verify if session has been authenticated with our JWT
     let isAuthenticated = function (req, res, next) {
@@ -210,7 +210,7 @@ module.exports = (function () {
         // req.query = {
         //     code: '70ad6940-2e8e-11ed-bd49-abebb0a8526f',
         //     state: 'myInfoRelayState',
-        //     scope: 'name sex race',
+        //     scope: 'name email mobileno',
         //     client_id: 'clientId',
         //     iss: 'http://localhost:5156/consent/oauth2/consent/myinfo-com'
         // }
@@ -240,8 +240,21 @@ module.exports = (function () {
             result = null;
         }
 
+        let username = '';
+        let info = null;
+        if (result?.data) {
+            username = result.uinFin;
+            info = {};
+            Object.keys(result.data).forEach((attribute) => {
+                info[attribute] = result.data[attribute].value;
+            });
+        }
+
         let html = helper.render(req, layoutTemplate, {
-            info: result?.data,
+            user: {
+                username: username,
+                info: info,
+            },
         });
 
         res.status(200).send(html);

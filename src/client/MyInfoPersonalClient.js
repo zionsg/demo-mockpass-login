@@ -5,6 +5,41 @@ const fs = require('fs');
 /**
  * MyInfo Personal client
  *
+ * Sample JSON result from MyInfoGovClient.getPerson():
+ *     {
+ *       "uinFin": "S9812379B",
+ *       "data": {
+ *         "name": {
+ *           "lastupdated": "2020-04-16",
+ *           "source": "1",
+ *           "classification": "C",
+ *           "value": "JOHN DOE"
+ *         },
+ *         "email": {
+ *           "lastupdated": "2020-04-16",
+ *           "source": "2",
+ *           "classification": "C",
+ *           "value": "myinfotesting@gmail.com"
+ *         },
+ *         "mobileno": {
+ *           "lastupdated": "2020-04-16",
+ *           "source": "2",
+ *           "classification": "C",
+ *           "areacode": {
+ *             "value": "65"
+ *           },
+ *           "prefix": {
+ *             "value": "+"
+ *           },
+ *           "nbr": {
+ *             "value": "97399245"
+ *           }
+ *         },
+ *         "iat": 1662691469
+ *       }
+ *     }
+ *
+ *
  * @param {object} config - See https://github.com/opengovsg/myinfo-gov-client for more info.
  * @returns {MyInfoGovClient}
  */

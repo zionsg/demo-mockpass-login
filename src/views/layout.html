@@ -36,10 +36,17 @@
 
       {{^is_login}}
         <p>
-          Welcome Back, {{user.username}}!
+          Welcome Back, {{user.username}}!<br>
+
           {{#user.uen}}
             <br>Organization: {{user.uen}}
           {{/user.uen}}
+
+          {{#user.info}}
+            <br>Name: {{name}}
+            <br>Email: {{email}}
+            <br>Mobile: {{mobileno}}
+          {{/user.info}}
         </p>
 
         <p><a href="/demo/login">&lt; Back to Login Page</a></p>
