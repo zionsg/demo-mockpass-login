@@ -23,7 +23,9 @@
         </p>
         <p>
           <a href="{{{myinfo_business_redirect_url}}}">Retrieve profile from MyInfo Business</a>
-          <br>(uses MyInfo Business sandbox and not local MockPass server, select user and click "Agree" when prompted)
+          <br>
+          (uses MyInfo Business online test server cos local MockPass server does not support it yet,
+          select user and click "Agree" when prompted)
         </p>
 
         <p>
@@ -31,19 +33,16 @@
             Unfortunately, QR generation only works if domain is registered with SingPass else CORS error
           </i></div>
           <div id="singpass-qr"></div>
-        </p>
-
-        <p>
           <div id="corppass-qr"></div>
         </p>
       {{/is_login}}
 
       {{^is_login}}
         <p>
-          Welcome Back, {{user.username}}!<br>
+          Welcome Back, NRIC/FIN {{user.username}}!<br>
 
           {{#user.uen}}
-            <br>Organization: {{user.uen}}
+            <br>Organization UEN: {{user.uen}}
           {{/user.uen}}
 
           {{#user.info}}

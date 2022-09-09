@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const http = require('http');
 const https = require('https');
+const jose = require('node-jose');
 const jwt = require('jsonwebtoken');
 
 /**
@@ -43,7 +44,7 @@ module.exports = (function (config) {
      * @property {string} config.myInfoPublicKey - MyInfo server's public key for verifying
      *     their signature.
      * @property {string} config.myInfoApiBaseUrl - Base URL of My Info API without trailing slash,
-     *     e.g. https://sandbox.api.myinfo.gov.sg/biz/v2.
+     *     e.g. https://test.api.myinfo.gov.sg/biz/v2.
      * @property {(null|LoggerCallback)} config.logger. Optional logging function which will be used
      *     to output log messages. Defaults to using console.log() if not specified, set to null
      *     to disable log messages.
@@ -157,7 +158,6 @@ module.exports = (function (config) {
      * Retrieves the requested MyInfo attributes from the Entity-Person endpoint after
      * the client has logged in to SingPass and consented to providing the given attributes
      *
-     * @todo MyInfo Biz sandbox does not return encrypted JWE, need to make this work with encrypted JWE
      * @public
      * @param {string} accessToken - Access token from getAccessToken().
      * @param {string[]} requestedAttributes - MyInfo attributes requested.
@@ -185,19 +185,75 @@ module.exports = (function (config) {
 
         let response = null;
         try {
-            response = await sendHttpRequest(`${url}?` + generateQueryString(params), 'GET', null, headers);
+            // Don't parse response into JSON object
+            response = await sendHttpRequest(`${url}?` + generateQueryString(params), 'GET', null, headers, true);
         } catch (err) {
             self.config.logger(LOG_ERROR, err.message, err);
             throw err;
         }
 
-        return response;
+        let jws = await decryptJwe(response);
+        let decoded = verifyJws(jws);
+
+        return decoded;
     };
+
+    /**
+     * Decrypt JWE (JSON Web Encryption)
+     *
+     * @private
+     * @link From decryptJWE() in https://github.com/singpass/myinfobiz-demo-app/blob/master/lib/securityHelper.js
+     *     which in turn is from https://api.singpass.gov.sg/library/myinfobiz/developers/tutorial3
+     * @param {string} jws
+     * @returns {Promise<object>} Decrypted JWS (JSON Web Signature) payload.
+     * @throws {Error} Throws if error decrypting JWE.
+     */
+    async function decryptJwe(jwe) {
+        return new Promise((resolve, reject) => {
+            let jweParts = (jwe || '').split('.');
+            let header = jweParts[0];
+            let encryptedKey = jweParts[1];
+            let iv = jweParts[2];
+            let cipherText = jweParts[3];
+            let tag = jweParts[4];
+
+            let keystore = jose.JWK.createKeyStore();
+            let data = {
+                type: 'compact',
+                ciphertext: cipherText,
+                protected: header,
+                encrypted_key: encryptedKey,
+                tag: tag,
+                iv: iv,
+                header: JSON.parse(jose.util.base64url.decode(header).toString())
+            };
+
+            keystore.add(self.config.clientPrivateKey, 'pem')
+                .then((jweKey) => {
+                    // result is a jose.JWK.Key
+                    jose.JWE.createDecrypt(jweKey)
+                        .decrypt(data)
+                        .then((result) => {
+                            resolve(JSON.parse(result.payload.toString()));
+                        })
+                        .catch((err) => {
+                            self.config.logger(LOG_ERROR, err.message, err);
+                            reject(err);
+                        });
+                })
+                .catch((err) => {
+                    self.config.logger(LOG_ERROR, err.message, err);
+                    reject(err);
+                });
+        });
+    }
 
     /**
      * Extract UEN and UUID from access token
      *
      * @private
+     * @link Adapted from callEntityPersonAPI() in
+     *     https://github.com/singpass/myinfobiz-demo-app/blob/master/routes/index.js
      * @param {string} accessToken
      * @returns {(null|object)} Null returned if error. Format of object:
      *     {
@@ -223,6 +279,9 @@ module.exports = (function (config) {
      * Generate content of Authorization header to be sent with a request to MyInfo
      *
      * @private
+     * @link From generateSHA256withRSAHeader() in
+     *     https://github.com/singpass/myinfobiz-demo-app/blob/master/lib/securityHelper.js
+     *     turn is from https://api.singpass.gov.sg/library/myinfobiz/developers/tutorial3
      * @param {string="GET","POST"} method - HTTP method to be used for the request.
      * @param {string} url - Endpoint to which the request is being sent.
      * @param {object} urlParams - Key-value pairs for query parameters being sent with the request.
@@ -283,10 +342,13 @@ module.exports = (function (config) {
      * @param {string} method=GET - HTTP method. Possible values: GET, POST.
      * @param {(null|object)} body=null - Request body in JSON, usually for POST requests.
      * @param {(null|object)} headers=null - Request headers using header-value pairs.
+     * @param {boolean} skipParseBody=false - Whether to skip parsing of body into JSON object.
+     *     Set to true if response returns a string, file contents, JWE (JSON Web Encryption) or
+     *     JWS (JSON Web Signature).
      * @returns {Promise<object>}
      * @throws {Error} Throws if request has errors.
      */
-    async function sendHttpRequest(url, method = 'GET', body = null, headers = null) {
+    async function sendHttpRequest(url, method = 'GET', body = null, headers = null, skipParseBody = false) {
         return new Promise((resolve, reject) => {
             // Use https if url starts with https, else use http
             let client = url.match(/^https/) ? https : http;
@@ -305,11 +367,16 @@ module.exports = (function (config) {
 
                     // The whole response has been received
                     response.on('end', () => {
+                        if (skipParseBody) {
+                            resolve(rawBody);
+                            return;
+                        }
+
                         let parsedBody = null;
                         try {
                             parsedBody = JSON.parse(rawBody);
                         } catch (err) {
-                            self.config.logger(LOG_ERROR, err.message, err);
+                            self.config.logger(LOG_ERROR, 'Could not parse body into JSON', rawBody);
                             reject(err);
                         }
 
@@ -344,6 +411,7 @@ module.exports = (function (config) {
      *
      * @private
      * @link From verifyJWS() in https://github.com/singpass/myinfobiz-demo-app/blob/master/lib/securityHelper.js
+     *     which in turn is from https://api.singpass.gov.sg/library/myinfobiz/developers/tutorial3
      * @param {string} jws
      * @returns {(null|object)} Null returned if error. Format of object:
      *     {
@@ -381,7 +449,7 @@ module.exports = (function (config) {
     (function init() {
         if (self.config.useDemoDefaults) {
             // MockPass does not support MyInfo Business at this point of time
-            // The MyInfo Business sandbox only responds to specific credentials and certificates,
+            // The MyInfo Business online test server only responds to specific credentials and certificates,
             // namely those in https://github.com/singpass/myinfobiz-demo-app/blob/master/start.sh
             // hence using them here. Note that `npm install https://github.com/singpass/myinfobiz-demo-app`
             // installs to node_modules/myinfo-tutorial-app not node_modules/singpass/myinfobiz-demo-app
@@ -393,7 +461,8 @@ module.exports = (function (config) {
                 redirectEndpoint: process.env.DEMO_MYINFO_BUSINESS_ASSERT_ENDPOINT,
                 clientPrivateKey: fs.readFileSync(`${certPath}/your-sample-app-private-key.pem`),
                 myInfoPublicKey: fs.readFileSync(`${certPath}/staging-myinfo-public-cert.pem`),
-                myInfoApiBaseUrl: 'https://sandbox.api.myinfo.gov.sg/biz/v2',
+                // not using sandbox.api.myinfo.gov.sg cos that does not return encrypted response like production
+                myInfoApiBaseUrl: 'https://test.api.myinfo.gov.sg/biz/v2',
             });
 
             return;

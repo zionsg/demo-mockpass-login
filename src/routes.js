@@ -269,8 +269,9 @@ module.exports = (function () {
     });
 
     // Full URL for this route is the value for DEMO_MYINFO_BUSINESS_ASSERT_ENDPOINT env var in .env
-    // Full URL must be http://localhost:3001/callback else will not work with MyInfo Business sandbox API
-    // (see https://github.com/singpass/myinfobiz-demo-app/blob/master/start.bat)
+    // Full URL must be http://localhost:3001/callback else will not work with MyInfo Business online test server
+    // (cos local MockPass does not support it yet), see
+    // https://github.com/singpass/myinfobiz-demo-app/blob/master/start.bat for more info.
     router.use('/callback', async (req, res, next) => {
         // req.query = {
         //     code: '78e0ab02f59464dfaa6b2ec052a66d5b499906a6',

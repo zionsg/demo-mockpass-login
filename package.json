@@ -27,6 +27,7 @@
     "jsonwebtoken": "^8.5.1",
     "mustache": "^4.2.0",
     "myinfo-tutorial-app": "github:singpass/myinfobiz-demo-app",
+    "node-jose": "^2.1.1",
     "nodemon": "^2.0.19",
     "xml2js": "^0.4.23"
   },

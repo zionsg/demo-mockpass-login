@@ -23,7 +23,7 @@ of the repository. Shell commands are all run from the root of the repository.
     + [SingPass MyInfo OIDC helper](https://github.com/GovTechSG/singpass-myinfo-oidc-helper)
     + [MyInfo client](https://github.com/opengovsg/myinfo-gov-client)
     + [MyInfo Demo App](https://github.com/ndi-trusted-data/myinfo-demo-app)
-    + [MyInfo Business Demo App](https://github.com/ndi-trusted-data/myinfobiz-demo-app)
+    + [MyInfo Business Demo App](https://github.com/singpass/myinfobiz-demo-app)
 
 ## Requirements
 - [Docker Engine](https://docs.docker.com/engine/release-notes/) >= 20.10.7
@@ -118,5 +118,4 @@ of the repository. Shell commands are all run from the root of the repository.
     + Run `npm run stop` to stop the Docker container or just press `Ctrl+C`.
       However, the former should be used as it will properly shut down the
       container, else it may have problems restarting later.
-    + The website can be accessed via `http://localhost:5000`.
-        * See `DEMO_PORT_*` env vars in `.env` for port settings.
+    + The website can be accessed via `http://localhost:3001`.
