@@ -26,7 +26,7 @@ module.exports = (function () {
     let myInfoPersonalClient = new MyInfoPersonalClient();
     let myInfoPersonalRequestedAttributes = ['name', 'email', 'mobileno'];
     let myInfoBusinessClient = new MyInfoBusinessClient({ useDemoDefaults: true });
-    let myInfoBusinessRequestedAttributes = ['name', 'email', 'mobileno'];
+    let myInfoBusinessRequestedAttributes = ['basic-profile', 'uinfin', 'name', 'email', 'mobileno'];
 
     // Verify if session has been authenticated with our JWT
     let isAuthenticated = function (req, res, next) {
@@ -269,9 +269,13 @@ module.exports = (function () {
     });
 
     // Full URL for this route is the value for DEMO_MYINFO_BUSINESS_ASSERT_ENDPOINT env var in .env
-    // MyInfo would eventually pass control back by GET-ing a pre-agreed endpoint, proceed to obtain the user's
-    // identity using out-of-band (OOB) authentication
-    router.use('/demo/myinfo-business/assert', async (req, res, next) => {
+    // Full URL must be http://localhost:3001/callback else will not work with MyInfo Business sandbox API
+    // (see https://github.com/singpass/myinfobiz-demo-app/blob/master/start.bat)
+    router.use('/callback', async (req, res, next) => {
+        // req.query = {
+        //     code: '78e0ab02f59464dfaa6b2ec052a66d5b499906a6',
+        //     state: 'myInfoBusinessRelayState'
+        // }
         let code = req.query.code;
 
         let accessToken = '';
@@ -290,18 +294,32 @@ module.exports = (function () {
             result = null;
         }
 
+        let uen = '';
         let username = '';
         let info = null;
-        if (result?.data) {
-            username = result.uinFin;
+        if (result) {
+            uen = result?.entity?.['basic-profile']?.uen?.value;
+            username = result?.person?.uinfin?.value;
             info = {};
-            Object.keys(result.data).forEach((attribute) => {
-                info[attribute] = result.data[attribute].value;
+            Object.keys(result?.person).forEach((attribute) => {
+                if ('uinfin' === attribute) {
+                    return;
+                }
+
+                if ('mobileno' === attribute) {
+                    info[attribute] = (result.person[attribute]?.prefix?.value || '')
+                        + (result.person[attribute]?.areacode?.value || '')
+                        + (result.person[attribute]?.nbr?.value || '');
+                } else {
+                    info[attribute] = result.person[attribute].value;
+                }
+
             });
         }
 
         let html = helper.render(req, layoutTemplate, {
             user: {
+                uen: uen,
                 username: username,
                 info: info,
             },

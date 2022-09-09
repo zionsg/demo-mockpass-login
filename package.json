@@ -24,7 +24,9 @@
     "cors": "^2.8.5",
     "dotenv": "^16.0.2",
     "express": "^4.18.1",
+    "jsonwebtoken": "^8.5.1",
     "mustache": "^4.2.0",
+    "myinfo-tutorial-app": "github:singpass/myinfobiz-demo-app",
     "nodemon": "^2.0.19",
     "xml2js": "^0.4.23"
   },

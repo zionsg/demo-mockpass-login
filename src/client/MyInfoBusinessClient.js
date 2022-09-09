@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const http = require('http');
 const https = require('https');
+const jwt = require('jsonwebtoken');
 
 /**
  * MyInfo Business client
@@ -35,8 +36,6 @@ module.exports = (function (config) {
      *     specify the other config params.
      * @property {string} config.clientId - Client ID provided by MyInfo, also known as App ID.
      * @property {string} config.clientSecret - Client secret provided by MyInfo.
-     * @property {string} config.singpassEserviceId - The default e-service ID registered with
-     *     SingPass.
      * @property {string} config.redirectEndpoint - Endpoint to which user should be redirected
      *     after login.
      * @property {string} config.clientPrivateKey - RSA-SHA256 private key, which must correspond
@@ -55,7 +54,6 @@ module.exports = (function (config) {
                 useDemoDefaults: false,
                 clientId: '',
                 clientSecret: '',
-                singpassEserviceId: '',
                 redirectEndpoint: '',
                 clientPrivateKey: '',
                 myInfoPublicKey: '',
@@ -96,20 +94,17 @@ module.exports = (function (config) {
      *     consent to provide.
      * @param {string} options.relayState - State to be forwarded to the redirect endpoint via query
      *     parameters.
-     * @param {string} options.singpassEserviceId - Optional alternative SingPass e-service ID.
-     *     Defaults to the e-serviceId provided in the config.
      * @param {string} options.redirectEndpoint - Optional alternative redirect endpoint.
      *     Defaults to the endpoint provided in the config.
      * @returns {string}
      */
     self.createRedirectUrl = function (options) {
-        let queryParams = {
+        let queryParams = { // does not have singpassEserviceId unlike MyInfo Personal
             purpose: options.purpose || '',
             attributes: (options.requestedAttributes || []).join(','),
             state: options.relayState || '',
             client_id: self.config.clientId,
             redirect_uri: options.redirectEndpoint || self.config.redirectEndpoint,
-            sp_esvcId: options.singpassEserviceId || self.config.singpassEserviceId,
         };
 
         return `${self.config.myInfoApiBaseUrl}/${ENDPOINT_AUTHORISE}?` + generateQueryString(queryParams);
@@ -120,15 +115,17 @@ module.exports = (function (config) {
      *
      * @public
      * @param {string} authCode - Authorization code provided to the redirect endpoint.
+     * @param {string} relayState - State to be forwarded to the redirect endpoint via query params.
      * @returns {string} The access token as a JWT (JSON Web Token).
      * @throws {Error} Throws if MyInfo returns a non-200 response.
      * @throws {Error} Throws if MyInfo response does not contain the access token.
      */
-    self.getAccessToken = async function (authCode) {
+    self.getAccessToken = async function (authCode, relayState) {
         let postUrl = `${self.config.myInfoApiBaseUrl}/${ENDPOINT_TOKEN}`;
         let postParams = {
             grant_type: 'authorization_code',
             code: authCode,
+            state: relayState,
             redirect_uri: self.config.redirectEndpoint,
             client_id: self.config.clientId,
             client_secret: self.config.clientSecret,
@@ -147,14 +144,80 @@ module.exports = (function (config) {
             throw err;
         }
 
-        if (!response?.data?.access_token || typeof response.data.access_token !== 'string') {
+        if (!response?.access_token || typeof response.access_token !== 'string') {
             let msg = 'Missing access token in response.';
             self.config.logger(LOG_ERROR, msg, response);
             throw new Error(msg);
         }
 
-        return response.data.access_token;
+        return response.access_token;
     };
+
+    /**
+     * Retrieves the requested MyInfo attributes from the Entity-Person endpoint after
+     * the client has logged in to SingPass and consented to providing the given attributes
+     *
+     * @todo MyInfo Biz sandbox does not return encrypted JWE, need to make this work with encrypted JWE
+     * @public
+     * @param {string} accessToken - Access token from getAccessToken().
+     * @param {string[]} requestedAttributes - MyInfo attributes requested.
+     * @returns {object}
+     * @throws {Error} Throws if unable to extract UEN and UUID from access token.
+     * @throws {Error} Throws if MyInfo returns a non-200 response.
+     */
+    self.getEntityPerson = async function (accessToken, requestedAttributes) {
+        let uenUuid = extractUenUuid(accessToken);
+        if (!uenUuid) {
+            throw new Error('Unable to extract UEN/UUID from access token.');
+        }
+
+        let url = `${self.config.myInfoApiBaseUrl}/${ENDPOINT_ENTITY_PERSON}/${uenUuid.uen}/${uenUuid.uuid}`;
+        let params = {
+            client_id: self.config.clientId,
+            attributes: requestedAttributes.join(','),
+        };
+        let headers = {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache',
+            // url has no querystring params appended when generating auth header
+            'Authorization': generateAuthHeader('GET', url, params) + `,Bearer ${accessToken}`,
+        };
+
+        let response = null;
+        try {
+            response = await sendHttpRequest(`${url}?` + generateQueryString(params), 'GET', null, headers);
+        } catch (err) {
+            self.config.logger(LOG_ERROR, err.message, err);
+            throw err;
+        }
+
+        return response;
+    };
+
+    /**
+     * Extract UEN and UUID from access token
+     *
+     * @private
+     * @param {string} accessToken
+     * @returns {(null|object)} Null returned if error. Format of object:
+     *     {
+     *         uen: '12345678A',
+     *         uuid: '499bb4c4-7462-0716-41ac-71fcb021a548'
+     *     }
+     */
+    function extractUenUuid(accessToken) {
+        let decoded = verifyJws(accessToken);
+        if (!decoded?.sub) {
+            return null;
+        }
+
+        let sub = decoded.sub.split('_');
+
+        return {
+            uen: sub[0],
+            uuid: sub[1],
+        };
+    }
 
     /**
      * Generate content of Authorization header to be sent with a request to MyInfo
@@ -169,6 +232,7 @@ module.exports = (function (config) {
         let timestamp = Date.now().toString();
         let nonce = crypto.randomBytes(32).toString('base64');
         let authParams = Object.assign(
+            {}, // must assign to empty object else urlParams will be modified
             urlParams || {},
             {
                 signature_method: 'RS256',
@@ -262,7 +326,12 @@ module.exports = (function (config) {
 
             // Write body if any
             if (body) {
-                request.write(JSON.stringify(body));
+                let contentType = headers?.['Content-Type'] || 'application/json';
+                if ('application/x-www-form-urlencoded' === contentType) {
+                    request.write(generateQueryString(body));
+                } else {
+                    request.write(JSON.stringify(body));
+                }
             }
 
             // Send out request
@@ -270,23 +339,61 @@ module.exports = (function (config) {
         });
     }
 
+    /**
+     * Verify and decode JWS (JSON Web Signature) or JWT (JSON Web Token)
+     *
+     * @private
+     * @link From verifyJWS() in https://github.com/singpass/myinfobiz-demo-app/blob/master/lib/securityHelper.js
+     * @param {string} jws
+     * @returns {(null|object)} Null returned if error. Format of object:
+     *     {
+     *         sub: '12345678A_499bb4c4-7462-0716-41ac-71fcb021a548',
+     *         jti: 'kgHQtzZhQflRbEXVgBnBK6Kl5DIznY9g6v2bgQl3',
+     *         scope: [ 'basic-profile', 'uinfin', 'name', 'email', 'mobileno' ],
+     *         tokenName: 'access_token',
+     *         token_type: 'Bearer',
+     *         grant_type: 'authorization_code',
+     *         expires_in: 1800,
+     *         aud: 'STG2-MYINFOBIZ-SELF-TEST',
+     *         realm: 'myinfo-biz',
+     *         iss: 'https://test.api.myinfo.gov.sg/serviceauth/myinfo-biz',
+     *         iat: 1662720023,
+     *         nbf: 1662720023,
+     *         exp: 1662721823
+     *    }
+     */
+    function verifyJws(jws) {
+        let decoded = null;
+        try {
+            decoded = jwt.verify(jws, self.config.myInfoPublicKey, {
+                algorithms: ['RS256'],
+                ignoreNotBefore: true // ignore notbefore check cos it gives errors sometimes if the call is too fast
+            });
+        } catch (err) {
+            self.config.logger(LOG_ERROR, err.message, err);
+            decoded = null;
+        }
+
+        return decoded;
+    }
+
     // Initialization
     (function init() {
         if (self.config.useDemoDefaults) {
-            let certPath = process.env.DEMO_ROOT + 'node_modules/@opengovsg/mockpass/static/certs';
+            // MockPass does not support MyInfo Business at this point of time
+            // The MyInfo Business sandbox only responds to specific credentials and certificates,
+            // namely those in https://github.com/singpass/myinfobiz-demo-app/blob/master/start.sh
+            // hence using them here. Note that `npm install https://github.com/singpass/myinfobiz-demo-app`
+            // installs to node_modules/myinfo-tutorial-app not node_modules/singpass/myinfobiz-demo-app
+            let certPath = process.env.DEMO_ROOT + 'node_modules/myinfo-tutorial-app/ssl';
             self.config = Object.assign(self.config, {
-                clientId: 'clientId',
-                clientSecret: process.env.DEMO_MYINFO_CLIENT_SECRET,
+                clientId: 'STG2-MYINFOBIZ-SELF-TEST',
+                clientSecret: '44d953c796cccebcec9bdc826852857ab412fbe2',
                 singpassEserviceId: 'singpassEserviceId',
                 redirectEndpoint: process.env.DEMO_MYINFO_BUSINESS_ASSERT_ENDPOINT,
-                // clientPrivateKey - key.pem's public key, key.pub, is used for serviceProvider.pubKey in
-                // https://github.com/opengovsg/mockpass/blob/master/index.js, which in turn is used by verify() in
-                // https://github.com/opengovsg/mockpass/blob/master/lib/express/myinfo/controllers.js
-                clientPrivateKey: fs.readFileSync(`${certPath}/key.pem`),
-                // myInfoPublicKey refers to MOCKPASS_PUBLIC_KEY in
-                // https://github.com/opengovsg/mockpass/blob/master/lib/express/myinfo/controllers.js
-                myInfoPublicKey: fs.readFileSync(`${certPath}/spcp.crt`),
-                myInfoApiBaseUrl: process.env.DEMO_MYINFO_BUSINESS_BASEURL_EXTERNAL,
+                clientPrivateKey: fs.readFileSync(`${certPath}/your-sample-app-private-key.pem`),
+                myInfoPublicKey: fs.readFileSync(`${certPath}/staging-myinfo-public-cert.pem`),
+                myInfoApiBaseUrl: 'https://sandbox.api.myinfo.gov.sg/biz/v2',
             });
 
             return;
