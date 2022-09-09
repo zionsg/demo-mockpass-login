@@ -9,7 +9,7 @@ const fs = require('fs');
  * @returns {SPCPAuthClient}
  */
 module.exports = (function (config) {
-    let certPath = process.env.DEMO_ROOT + 'node_modules/@opengovsg/mockpass/static/certs/';
+    let certPath = process.env.DEMO_ROOT + 'node_modules/@opengovsg/mockpass/static/certs';
 
     return new SPCPAuthClient(Object.assign(
         {

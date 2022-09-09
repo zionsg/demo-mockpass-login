@@ -217,7 +217,7 @@ module.exports = (function () {
     router.use('/demo/myinfo-personal/assert', async (req, res, next) => {
         // req.query = {
         //     code: '70ad6940-2e8e-11ed-bd49-abebb0a8526f',
-        //     state: 'myInfoRelayState',
+        //     state: 'myInfoPersonalRelayState',
         //     scope: 'name email mobileno',
         //     client_id: 'clientId',
         //     iss: 'http://localhost:5156/consent/oauth2/consent/myinfo-com'
@@ -245,6 +245,48 @@ module.exports = (function () {
             result = await myInfoPersonalClient.getPerson(accessToken, myInfoPersonalRequestedAttributes);
         } catch (err) {
             console.error('getPerson', err);
+            result = null;
+        }
+
+        let username = '';
+        let info = null;
+        if (result?.data) {
+            username = result.uinFin;
+            info = {};
+            Object.keys(result.data).forEach((attribute) => {
+                info[attribute] = result.data[attribute].value;
+            });
+        }
+
+        let html = helper.render(req, layoutTemplate, {
+            user: {
+                username: username,
+                info: info,
+            },
+        });
+
+        res.status(200).send(html);
+    });
+
+    // Full URL for this route is the value for DEMO_MYINFO_BUSINESS_ASSERT_ENDPOINT env var in .env
+    // MyInfo would eventually pass control back by GET-ing a pre-agreed endpoint, proceed to obtain the user's
+    // identity using out-of-band (OOB) authentication
+    router.use('/demo/myinfo-business/assert', async (req, res, next) => {
+        let code = req.query.code;
+
+        let accessToken = '';
+        let result = null;
+        try {
+            accessToken = await myInfoBusinessClient.getAccessToken(code);
+        } catch (err) {
+            console.error('accessToken', err);
+            accessToken = '';
+        }
+
+        try {
+            result = await myInfoBusinessClient.getEntityPerson(accessToken, myInfoBusinessRequestedAttributes);
+        } catch (err) {
+            console.error('getEntityPerson', err);
             result = null;
         }
 

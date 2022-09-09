@@ -44,7 +44,7 @@ const fs = require('fs');
  * @returns {MyInfoGovClient}
  */
 module.exports = (function (config) {
-    let certPath = process.env.DEMO_ROOT + 'node_modules/@opengovsg/mockpass/static/certs/';
+    let certPath = process.env.DEMO_ROOT + 'node_modules/@opengovsg/mockpass/static/certs';
 
     // See https://github.com/opengovsg/myinfo-gov-client/blob/develop/src/MyInfoGovClient.class.ts on params
     // See https://github.com/opengovsg/myinfo-gov-client/blob/develop/test/constants.ts on certs to use from MockPass
