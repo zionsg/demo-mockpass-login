@@ -1,5 +1,6 @@
 // Import modules
 const CorpPassClient = require(process.env.DEMO_ROOT + 'src/client/CorpPassClient.js');
+const MyInfoBusinessClient = require(process.env.DEMO_ROOT + 'src/client/MyInfoBusinessClient.js');
 const MyInfoPersonalClient = require(process.env.DEMO_ROOT + 'src/client/MyInfoPersonalClient.js');
 const SingPassClient = require(process.env.DEMO_ROOT + 'src/client/SingPassClient.js');
 const cookieParser = require('cookie-parser');
@@ -24,6 +25,8 @@ module.exports = (function () {
     let corpPassClient = new CorpPassClient();
     let myInfoPersonalClient = new MyInfoPersonalClient();
     let myInfoPersonalRequestedAttributes = ['name', 'email', 'mobileno'];
+    let myInfoBusinessClient = new MyInfoBusinessClient({ useDemoDefaults: true });
+    let myInfoBusinessRequestedAttributes = ['name', 'email', 'mobileno'];
 
     // Verify if session has been authenticated with our JWT
     let isAuthenticated = function (req, res, next) {
@@ -112,9 +115,14 @@ module.exports = (function () {
             singpass_redirect_url: singPassClient.createRedirectURL(postLoginPage),
             corppass_redirect_url: corpPassClient.createRedirectURL(postLoginPage),
             myinfo_personal_redirect_url: myInfoPersonalClient.createRedirectURL({
-                purpose: 'Info for Demo MockPass Login application',
+                purpose: 'Personal Info for Demo MockPass Login application',
                 requestedAttributes: myInfoPersonalRequestedAttributes,
-                relayState: 'myInfoRelayState',
+                relayState: 'myInfoPersonalRelayState',
+            }),
+            myinfo_business_redirect_url: myInfoBusinessClient.createRedirectUrl({
+                purpose: 'Business Info for Demo MockPass Login application',
+                requestedAttributes: myInfoBusinessRequestedAttributes,
+                relayState: 'myInfoBusinessRelayState',
             }),
         });
 
