@@ -2,6 +2,11 @@
   "name": "demo-mockpass-login",
   "version": "0.1.0",
   "description": "Website to demo SingPass/CorpPass login using MockPass server",
+  "homepage": "https://github.com/zionsg/demo-mockpass-login",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zionsg/demo-mockpass-login.git"
+  },
   "main": "src/index.js",
   "scripts": {
     "//": [
