@@ -10,10 +10,16 @@ FROM node:16.15.0-bullseye-slim
 ENV DEBIAN_FRONTEND=noninteractive NODE_ENV=production
 
 # Install system packages: cURL (used in healthcheck), dumb-init (used in Dockerfile), nano/vim (editors)
-# Specify the versions for the system packages to avoid surprises by `apt-get update`
+# Specify versions for system packages to avoid surprises by `apt-get update` causing different versions of the
+# package to be installed each time the Docker image is built.
 # Use `apt-cache policy <package>` (not `<package> --version`) to get the specific version installed by apt-get
+# or go to https://debian.pkgs.org/11/debian-main-amd64/ to find the package version (bullseye is Debian 11).
+# Note that Debian/Ubuntu only keeps one version of each package in the repository and the higher version always
+# gets the priority (i.e. higher version will be installed despite specifying the version here), hence now and then,
+# the Dockerfile may not build cos of "Some packages could not be installed...you have held broken packages" errors,
+# upon which the version here will need to be updated to the latest.
 RUN apt-get --yes update \
-    && apt-get --yes install curl=7.74.0-1.3+deb11u2 dumb-init=1.2.5-1 nano=5.4-2+deb11u1 vim=2:8.2.2434-3+deb11u1
+    && apt-get --yes install curl=7.74.0-1.3+deb11u3 dumb-init=1.2.5-1 nano=5.4-2+deb11u1 vim=2:8.2.2434-3+deb11u1
 
 # Create app directory and switch to it
 RUN mkdir -p /var/lib/app/public \
