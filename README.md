@@ -33,6 +33,17 @@ of the repository. Shell commands are all run from the root of the repository.
       https://github.com/compose-spec/compose-spec/blob/master/spec.md#depends_on
       for more info.
     + Version 3.6 is currently used for the Compose file format.
+- [Node.js](https://nodejs.org/) >= 16.15.0 (includes npm 8.5.5)
+    + `?.` optional chaining and `??` nullish coalescing operator supported from
+      Node.js 14 onwards. `btoa()` and `atob()` supported from Node.js 16
+      onwards.
+    + For the base Docker image, `node:16.15.0-bullseye-slim` is used.
+      At this time, the stable release for Debian is version 11, codenamed
+      Bullseye, released 2021-08-14 (see https://wiki.debian.org/DebianReleases
+      for more info). Alpine Linux is not used as Node.js only provides
+      experimental support for it, versus Tier 1 support for Debian (see
+      https://github.com/nodejs/node/blob/master/BUILDING.md#platform-list
+      for more info).
 
 ## Installation
 - Clone this repository.
