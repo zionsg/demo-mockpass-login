@@ -457,7 +457,6 @@ module.exports = (function (config) {
             self.config = Object.assign(self.config, {
                 clientId: 'STG2-MYINFOBIZ-SELF-TEST',
                 clientSecret: '44d953c796cccebcec9bdc826852857ab412fbe2',
-                singpassEserviceId: 'singpassEserviceId',
                 redirectEndpoint: process.env.DEMO_MYINFO_BUSINESS_ASSERT_ENDPOINT,
                 clientPrivateKey: fs.readFileSync(`${certPath}/your-sample-app-private-key.pem`),
                 myInfoPublicKey: fs.readFileSync(`${certPath}/staging-myinfo-public-cert.pem`),
