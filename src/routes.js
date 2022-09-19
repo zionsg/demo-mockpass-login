@@ -25,7 +25,9 @@ module.exports = (function () {
     let corpPassClient = new CorpPassClient();
     let myInfoPersonalClient = new MyInfoPersonalClient();
     let myInfoPersonalRequestedAttributes = ['name', 'email', 'mobileno'];
-    let myInfoBusinessClient = new MyInfoBusinessClient({ useDemoDefaults: true });
+    let myInfoBusinessClient = new MyInfoBusinessClient({
+        useDemoDefaults: true,
+    });
     let myInfoBusinessRequestedAttributes = ['basic-profile', 'uinfin', 'name', 'email', 'mobileno'];
 
     // Verify if session has been authenticated with our JWT

@@ -23,7 +23,8 @@ RUN apt-get --yes update \
 
 # Create app directory and switch to it
 RUN mkdir -p /var/lib/app/public \
-    && mkdir -p /var/lib/app/src
+    && mkdir -p /var/lib/app/src \
+    && mkdir -p /var/lib/app/tmp
 WORKDIR /var/lib/app
 
 # Copy only essential files and folders - Docker recommends using COPY instruction over ADD

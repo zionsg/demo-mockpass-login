@@ -117,6 +117,9 @@ of the repository. Shell commands are all run from the root of the repository.
                 - type: bind
                   source: /mnt/c/Users/Me/localhost/www/demo-mockpass-login/public/vendor
                   target: /var/lib/app/public/vendor
+                - type: bind
+                  source: /mnt/c/Users/Me/localhost/www/demo-mockpass-login/tmp
+                  target: /var/lib/app/tmp
               # This command uses Nodemon which is listed as a production dependency
               # cos container does not install devDependencies and node_modules are
               # read from container not host
