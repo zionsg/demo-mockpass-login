@@ -1,31 +1,24 @@
 // Import modules
-const SPCPAuthClient = require('@opengovsg/spcp-auth-client');
+const { Singpass } = require('singpass-myinfo-oidc-helper');
 const fs = require('fs');
 
 /**
- * SingPass client
+ * SingPass client (Post-NDI)
  *
- * @param {object} config - See https://github.com/opengovsg/spcp-auth-client for more info.
+ * @param {object} config - See https://github.com/GovTechSG/singpass-myinfo-oidc-helper/blob/master/README.md#singpass-post-ndi
  * @returns {SPCPAuthClient}
  */
 module.exports = (function (config) {
-    let certPath = process.env.DEMO_ROOT + 'node_modules/@opengovsg/mockpass/static/certs';
+    let certPath = process.env.MOCKPASS_ROOT + 'static/certs';
 
-    return new SPCPAuthClient(Object.assign(
+    return new Singpass(Object.assign(
         {
-            partnerEntityId: 'partnerEntityId',
-            // idpLoginURL route defined in https://github.com/opengovsg/mockpass/blob/master/lib/express/saml.js
-            idpLoginURL: `${process.env.DEMO_MOCKPASS_BASEURL_EXTERNAL}/singpass/logininitial`,
-            // idpEndpoint route defined in https://github.com/opengovsg/mockpass/blob/master/lib/express/saml.js
-            idpEndpoint: `${process.env.DEMO_MOCKPASS_BASEURL_INTERNAL}/singpass/soap`,
-            esrvcID: 'esrvcID', // SingPass e-Service ID
-            appCert: fs.readFileSync(`${certPath}/key.pub`),
-            appKey: fs.readFileSync(`${certPath}/key.pem`),
-            appEncryptionKey: fs.readFileSync(`${certPath}/key.pem`),
-            // spcpCert's signing key, spcp-key.pem is used by
-            // https://github.com/opengovsg/mockpass/blob/master/lib/assertions.js and
-            // https://github.com/opengovsg/mockpass/blob/master/lib/crypto/index.js
-            spcpCert: fs.readFileSync(`${certPath}/spcp.crt`),
+            // See https://github.com/opengovsg/mockpass/blob/main/README.md#singpass-v2-ndi-oidc on values for MockPass
+            oidcConfigUrl: `${process.env.DEMO_MOCKPASS_BASEURL_EXTERNAL}/singpass/v2/.well-known/openid-configuration`,
+            clientID: '',
+            redirectUri: '',
+            jweDecryptKey: fs.readFileSync(`${certPath}/oidc-v2-rp-secret.json`),
+            clientAssertionSignKey: fs.readFileSync(`${certPath}/key.pem`),
         },
         config || {}
     ));
