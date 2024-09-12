@@ -19,8 +19,7 @@ of the repository. Shell commands are all run from the root of the repository.
 - [CorpPass](https://www.developer.tech.gov.sg/products/categories/digital-identity/corppass/overview.html)
 - Related open-source Node.js repositories
     + [MockPass server](https://github.com/opengovsg/mockpass)
-    + [SingPass/CorpPass client](https://github.com/opengovsg/spcp-auth-client)
-    + [SingPass MyInfo OIDC helper](https://github.com/GovTechSG/singpass-myinfo-oidc-helper)
+    + [Singpass MyInfo OIDC helper](https://github.com/GovTechSG/singpass-myinfo-oidc-helper)
     + [MyInfo client](https://github.com/opengovsg/myinfo-gov-client)
     + [MyInfo Demo App](https://github.com/ndi-trusted-data/myinfo-demo-app)
     + [MyInfo Business Demo App](https://github.com/singpass/myinfobiz-demo-app)
