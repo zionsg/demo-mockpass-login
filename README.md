@@ -27,17 +27,27 @@ of the repository. Shell commands are all run from the root of the repository.
 
 ## Requirements
 - [Docker Engine](https://docs.docker.com/engine/release-notes/) >= 20.10.7
-- [Docker Compose](https://docs.docker.com/compose/release-notes/) >= 1.29.0
-    + `depends_on` condition in Docker Compose file to wait for successful
-      service completion added in Docker Compose v1.29.0 onwards. See
-      https://github.com/compose-spec/compose-spec/blob/master/spec.md#depends_on
-      for more info.
-    + Version 3.6 is currently used for the Compose file format.
-- [Node.js](https://nodejs.org/) >= 16.15.0 (includes npm 8.5.5)
+- [Docker Compose](https://docs.docker.com/compose/release-notes/) >= 2.14.0
+    + Docker Compose v3 not used as it does not support the `extends` key.
+    + Docker Compose v1 not used as it does not support the `depends_on` key.
+    + Note that Docker Compose v2 uses the `docker compose` command (without
+      hyphen) via the Compose plugin for Docker whereas Docker Compose v1 uses
+      the `docker-compose` command (with hyphen).
+        * [Install Docker Compose v2 plugin on Ubuntu 22.04](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-compose-on-ubuntu-22-04)
+    + Version 3.8 is currently used for the Compose file format.
+- [Node.js](https://nodejs.org/) >= 18.20.4 (includes npm 10.7.0)
     + `?.` optional chaining and `??` nullish coalescing operator supported from
-      Node.js 14 onwards. `btoa()` and `atob()` supported from Node.js 16
-      onwards.
-    + For the base Docker image, `node:16.15.0-bullseye-slim` is used.
+      Node.js 14 onwards. `btoa()` supported from Node.js 16 onwards.
+    + Node.js 18 is a LTS release. As of 25 Oct 2022, its status is Active LTS
+      with Maintenance LTS status starting from 18 Oct 2023. End-of-life is
+      30 Apr 2025.
+    + For development purposes, it is recommended that
+      [nvm](https://nodejs.org/en/download/package-manager/#nvm) be used to
+      install Node.js and npm as it can switch between multiple versions
+      if need be for different projects, e.g. `nvm install 18.20.4` to install
+      a specific version and `nvm alias default 18.20.4` to set the default
+      version.
+    + For the base Docker image, `node:18.20.4-bullseye-slim` is used.
       At this time, the stable release for Debian is version 11, codenamed
       Bullseye, released 2021-08-14 (see https://wiki.debian.org/DebianReleases
       for more info). Alpine Linux is not used as Node.js only provides
@@ -59,16 +69,6 @@ of the repository. Shell commands are all run from the root of the repository.
           on the host machine. See
           https://docs.docker.com/engine/install/linux-postinstall/ for more
           info.
-        * If you encounter the error "unexpected character in variable name"
-          when running `docker-compose`, try disabling Docker Compose v2
-          by running `docker-compose disable-v2` and ensuring all files have
-          UNIX-style line endings. See
-          https://docs.docker.com/compose/cli-command/ for more info.
-        * If you encounter the error "depends_on contains an invalid type"
-          when running `docker-compose`, check that `docker-compose --version`
-          is at least 1.29.0 and above. Either upgrade Docker Compose
-          or temporarily remove the `depends_on` sections in the Docker Compose
-          file.
         * If you see a stacktrace error when running a Docker command in
           Windows Subsystem for Linux (WSL),
           e.g. "Error: ENOENT: no such file or directory, uv_cwd",
@@ -84,24 +84,25 @@ of the repository. Shell commands are all run from the root of the repository.
 
           ```
           # docker-compose.override.yml in root of repository
-          version: "3.6" # this is the version for the compose file config, not the app
+          name: local # override Compose project name
+
           services:
             mockpass-server:
               # need to manually restart this container if code is changed locally cos modules alr loaded and
               # require() is cached, i.e. docker restart mockpass-server
               volumes:
+                # tmp/mockpass created by scripts/get-mockpass.sh which clones the MockPass repository
+                # and creates its package-lock.json needed to build the Docker image
                 - type: bind
-                  source: /mnt/c/Users/Me/localhost/www/demo-mockpass-login/node_modules/@opengovsg/mockpass/lib
+                  source: /mnt/c/Users/Me/localhost/www/demo-mockpass-login/tmp/mockpass
                   target: /usr/src/mockpass/lib
+
             demo-app:
               volumes:
                 # Cannot use the shortform "- ./src/:/var/lib/app/src" else Windows permission error
                 # Use the node_modules & public/vendor folders inside container not host cos packages may use
                 # Linux native libraries and not work on host platform (except opengovsg to allow changing of
                 # code to debug)
-                - type: bind
-                  source: /mnt/c/Users/Me/localhost/www/demo-mockpass-login/node_modules/@opengovsg
-                  target: /var/lib/app/node_modules/@opengovsg
                 - type: bind
                   source: /mnt/c/Users/Me/localhost/www/demo-mockpass-login/src
                   target: /var/lib/app/src
@@ -115,9 +116,6 @@ of the repository. Shell commands are all run from the root of the repository.
                   source: /mnt/c/Users/Me/localhost/www/demo-mockpass-login/public/js
                   target: /var/lib/app/public/js
                 - type: bind
-                  source: /mnt/c/Users/Me/localhost/www/demo-mockpass-login/public/vendor
-                  target: /var/lib/app/public/vendor
-                - type: bind
                   source: /mnt/c/Users/Me/localhost/www/demo-mockpass-login/tmp
                   target: /var/lib/app/tmp
               # This command uses Nodemon which is listed as a production dependency
@@ -126,8 +124,10 @@ of the repository. Shell commands are all run from the root of the repository.
               command: npm run dev
           ```
 
-    + Run `npm run start` to start the Docker containers for the application
-      and MockPass server. May need to run as `sudo` depending on host
+    + Run `npm run build:local` first to build the Docker images for MockPass
+      and this application
+    + Run `npm run start` to start the Docker containers for the MockPass server
+      and the application. May need to run as `sudo` depending on host
       machine, due to the use of Docker Compose.
     + Run `npm run stop` to stop the Docker container or just press `Ctrl+C`.
       However, the former should be used as it will properly shut down the

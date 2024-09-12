@@ -26,6 +26,32 @@ module.exports = (function () {
     };
 
     /**
+     * Log server-side error messages
+     *
+     * @public
+     * @uses log()
+     * @param {express.Request} request
+     * @param {...mixed} messages
+     * @returns void
+     */
+    self.logError = function (request, ...messages) {
+        log.call(null, request, messages, 'error');
+    };
+
+    /**
+     * Log server-side informational messages
+     *
+     * @public
+     * @uses log()
+     * @param {express.Request} request
+     * @param {...mixed} messages
+     * @returns void
+     */
+    self.logInfo = function (request, ...messages) {
+        log.call(null, request, messages, 'info');
+    };
+
+    /**
      * Render HTML using Mustache.js template
      *
      * @public
@@ -64,7 +90,7 @@ module.exports = (function () {
             try {
                 xml = atob(xml);
             } catch (err) {
-                console.error(err);
+                self.logError(null, err);
                 return null;
             }
         }
@@ -72,7 +98,7 @@ module.exports = (function () {
         return new Promise((resolve, reject) => {
             xml2js.parseString(xml, { trim: true }, (err, result) => {
                 if (err) {
-                    console.error(err);
+                    self.logError(null, err);
                     resolve(null); // don't use reject else caller has to wrap call in try/catch
                     return;
                 }
@@ -81,6 +107,29 @@ module.exports = (function () {
             });
         });
     };
+
+    /**
+     * Centralized server-side logging function
+     *
+     * @private
+     * @link Log format adapted from log() in https://github.com/zionsg/getmail/blob/master/src/App/Logger.php
+     * @param {(null|express.Request)} request
+     * @param {(mixed|mixed[])} messages - Either a string/int/object or an array of string/int/object.
+     * @param {string="error","info"} severityLevel="info" Severity level as per RFC 5424.
+     * @returns {void}
+     */
+    function log(request, messages, severityLevel = 'info') {
+        if (!Array.isArray(messages)) { // ensure always array
+            messages = [messages];
+        }
+
+        // Prepend timestamp, severity level and application name
+        messages.unshift(
+            '[' + (new Date()).toISOString() + '] [' + severityLevel.toUpperCase() + '] DEMO -'
+        );
+
+        console.log(...messages); // eslint-disable-line no-console
+    }
 
     // Return public interface of IIFE
     return self;

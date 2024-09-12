@@ -1,23 +1,60 @@
+# Adapted from https://github.com/zionsg/getmail/blob/master/.gitignore
+# This .gitignore caters for Docker, SSH, Terraform, Linux/macOS/Windows
+# operating systems and Node.js/PHP/Python programming languages.
+# Files specific to IDEs and editors should not be committed to repository.
+
+# Directories
+**/.terraform/*
+.idea/
+.vscode/
+__pycache__/
 dist/
 node_modules/
 tmp/
 vendor/
+venv/
+
+# Wildcard files
+# Files with :Zone.Identifier suffix due to copying files from Windows to Linux.
+*.http
+*.id_ed25519
+*.id_rsa
+*.key
+*.local.php
+*.log
+*.pem
+*.ppk
+*.pub
+*.pyc
 *.tar
 *.tar.gz
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
 *.tgz
+*.tmp
 *.zip
+*_override.tf
+*_override.tf.json
+*Zone.Identifier
 tmp.*
-*.log
+
+# Hidden files
+# See https://stackoverflow.com/a/54392358 on ignoring .python-version.
 .DS_Store
 .env
 .npmrc
+.python-version
+.terraformrc
+.venv
+
+# Normal files
+# See https://github.com/zionsg/getmail/blob/master/scripts/version.sh on VERSION.txt.
 Thumbs.db
 VERSION.txt
 desktop.ini
 docker-compose.override.yml
-
-# Allow vendor folder in public folder but do not commit files inside except .gitkeep (cos cannot commit empty folder)
-# Files from 3rd party libraries such as Bootstrap are placed in public/vendor and not committed but the folder needs
-# to exist for copying in Dockerfile
-public/vendor/*
-!public/vendor/.gitkeep
+local.php
+override.tf
+override.tf.json

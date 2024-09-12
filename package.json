@@ -10,19 +10,17 @@
   "main": "src/index.js",
   "scripts": {
     "//": [
-      "postinstall script required as Dockerfile in mockpass directory needs package-lock.json for npm ci to work.",
       "nodemon not in devDependencies cos may be used in docker-compose.override.yml.",
-      "nodemon set to watch node_modules/@opengovsg to facilitate debugging of libraries in there."
+      "nodemon set to watch node_modules/@opengovsg in to facilitate debugging of libraries in there."
     ],
-    "postinstall": "if [ \"${NODE_ENV}\" != \"production\" ]; then cd ./node_modules/@opengovsg/mockpass && npm install; fi",
+    "build:local": "scripts/get-mockpass.sh && DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain docker compose build --no-cache && docker compose up",
+    "dev": "nodemon src/index.js",
     "lint": "eslint '**/*.js' --ignore-pattern 'custom/' --ignore-pattern 'docs/' --ignore-pattern 'node_modules/' --ignore-pattern 'public/vendor/' --ignore-pattern 'tests/' --ignore-pattern 'tmp/' --ignore-pattern 'vendor/' --ignore-pattern '*.min.js'",
-    "dev": "nodemon --verbose --ext css,js,html --watch node_modules/@opengovsg --watch public --watch src --legacy-watch src/index.js",
-    "start": "docker-compose up",
-    "start:reset": "DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain docker-compose build --no-cache && docker-compose up",
-    "stop": "docker-compose down"
+    "start": "docker compose up --no-build",
+    "stop": "docker compose down",
+    "test": "echo 'Tests not implemented.'"
   },
   "dependencies": {
-    "@opengovsg/mockpass": "^2.9.2",
     "@opengovsg/myinfo-gov-client": "^4.0.1",
     "@opengovsg/spcp-auth-client": "^1.4.17",
     "cookie-parser": "^1.4.6",
@@ -39,23 +37,35 @@
   "devDependencies": {
     "eslint": "^8.23.0"
   },
+  "nodemonConfig": {
+    "verbose": true,
+    "legacyWatch": true,
+    "watch": [
+      "node_modules/@opengovsg",
+      "public",
+      "src"
+    ],
+    "ext": "css,js,html",
+    "ignoreRoot": [
+      ".git"
+    ]
+  },
   "eslintConfig": {
     "env": {
-      "es6": true,
+      "es2020": true,
       "node": true,
-      "browser": true
+      "browser": false
     },
     "globals": {
       "Atomics": "readonly",
+      "Blob": "readonly",
       "Buffer": "readonly",
       "SharedArrayBuffer": "readonly",
-      "__dirname": true,
-      "__filename": true,
-      "exports": true,
-      "global": true,
-      "module": false,
-      "process": false,
-      "require": false
+      "afterAll": "readonly",
+      "beforeAll": "readonly",
+      "describe": "readonly",
+      "expect": "readonly",
+      "it": "readonly"
     },
     "parserOptions": {
       "ecmaVersion": 2020,
@@ -66,10 +76,19 @@
     "extends": "eslint:recommended",
     "rules": {
       "no-async-promise-executor": "off",
-      "no-console": "warn",
+      "no-console": "error",
       "no-inner-declarations": "off",
       "no-tabs": "error",
       "no-trailing-spaces": "error",
+      "no-use-before-define": [
+        "error",
+        {
+          "functions": false,
+          "classes": true,
+          "variables": true,
+          "allowNamedExports": false
+        }
+      ],
       "no-unused-vars": "off",
       "no-useless-escape": "off",
       "no-param-reassign": [
@@ -112,7 +131,8 @@
         {
           "overrides": {
             "=": "after",
-            "+=": "after"
+            "+=": "after",
+            "-=": "after"
           }
         }
       ],
@@ -144,10 +164,18 @@
     "overrides": [
       {
         "files": [
-          "tests/**/*.js"
+          "public/js/**/*.js"
         ],
-        "rules": {
-          "no-restricted-syntax": "off"
+        "env": {
+          "es2020": true,
+          "node": false,
+          "browser": true
+        },
+        "globals": {
+          "bootstrap": false,
+          "enums": false,
+          "layout": false,
+          "utils": false
         }
       }
     ]

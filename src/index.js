@@ -8,17 +8,18 @@
 require('dotenv').config();
 process.env.DEMO_ROOT = require('path').join(__dirname, '../'); // root of repository, need trailing slash
 
-// Log unhandled Promise rejections and uncaught exceptions - must be set as early as possible
-process.on('unhandledRejection', (err) => {
-    console.error(`Unhandled rejection: ${err.message}.`, err?.stack);
-});
-process.on('uncaughtException', (err) => {
-    console.error(`Uncaught exception: ${err.message}.`, err?.stack);
-});
-
 // Import modules
 const express = require('express');
+const helper = require(process.env.DEMO_ROOT + 'src/helper.js');
 const router = require(process.env.DEMO_ROOT + 'src/routes.js');
+
+// Log unhandled Promise rejections and uncaught exceptions - must be set as early as possible
+process.on('unhandledRejection', (err) => {
+    helper.logError(null, `Unhandled rejection: ${err.message}.`, err?.stack);
+});
+process.on('uncaughtException', (err) => {
+    helper.logError(null, `Uncaught exception: ${err.message}.`, err?.stack);
+});
 
 // Express app
 let app = express(); // Express app created outside init() for module exports
@@ -38,7 +39,8 @@ app.use('/', router);
             timestamp: Date.now(),
         });
 
-        console.info(
+        helper.logInfo(
+            null,
             `Server started at port ${internalPort}. Open http://localhost:${externalPort}/demo/login in the browser.`
         );
     });
@@ -47,10 +49,10 @@ app.use('/', router);
     // Signal handling - put at the end cos server need to be init first
     ['SIGHUP', 'SIGINT', 'SIGTERM'].forEach((signal) => {
         process.on(signal, () => {
-            console.info(`Process received ${signal} signal. Attempting graceful shutdown.`);
+            helper.logInfo(null, `Process received ${signal} signal. Attempting graceful shutdown.`);
 
             server.close(() => {
-                console.info('HTTP server closed. Exiting process.');
+                helper.logInfo(null, 'HTTP server closed. Exiting process.');
                 process.exit(0);
             });
         });

@@ -1,0 +1,17 @@
+# Force UNIX line endings for all files
+# See https://www.scivision.dev/git-line-endings-windows-cygwin-wsl/
+# Also, run `git config --global core.autocrlf input` and
+# `git config --global core.eol lf`
+.gitattributes text eol=lf
+.gitignore text eol=lf
+Dockerfile text eol=lf
+.dockerignore text eol=lf
+*.css text eol=lf
+*.example text eol=lf
+*.html text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.sh text eol=lf
+*.sql text eol=lf
+*.yml text eol=lf

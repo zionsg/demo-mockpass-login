@@ -150,7 +150,7 @@ module.exports = (function () {
         singPassClient.getAttributes(samlArt, relayState, (err, data) => {
             if (err) {
                 // Indicate through cookies or headers that an error has occurred
-                console.error(err);
+                helper.logError(req, err);
                 res.cookie('login.error', err.message, cookieOptions);
             } else {
                 // If all is well and login occurs, the attributes are given
@@ -188,7 +188,7 @@ module.exports = (function () {
         corpPassClient.getAttributes(samlArt, relayState, async (err, data) => {
             if (err) {
                 // Indicate through cookies or headers that an error has occurred
-                console.error(err);
+                helper.logError(req, err);
                 res.cookie('login.error', err.message, cookieOptions);
             } else {
                 let relayState = data.relayState;
@@ -231,7 +231,7 @@ module.exports = (function () {
         try {
             accessToken = await myInfoPersonalClient.getAccessToken(code);
         } catch (err) {
-            console.error('accessToken', err);
+            helper.logError(req, 'accessToken', err);
             accessToken = '';
         }
 
@@ -246,7 +246,7 @@ module.exports = (function () {
             // to use the wrong baseString when computing the signature
             result = await myInfoPersonalClient.getPerson(accessToken, myInfoPersonalRequestedAttributes);
         } catch (err) {
-            console.error('getPerson', err);
+            helper.logError(req, 'getPerson', err);
             result = null;
         }
 
@@ -286,14 +286,14 @@ module.exports = (function () {
         try {
             accessToken = await myInfoBusinessClient.getAccessToken(code);
         } catch (err) {
-            console.error('accessToken', err);
+            helper.logError(req, 'accessToken', err);
             accessToken = '';
         }
 
         try {
             result = await myInfoBusinessClient.getEntityPerson(accessToken, myInfoBusinessRequestedAttributes);
         } catch (err) {
-            console.error('getEntityPerson', err);
+            helper.logError(req, 'getEntityPerson', err);
             result = null;
         }
 

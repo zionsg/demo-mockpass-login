@@ -1,6 +1,0 @@
-{
-  "//": [
-    "Need to override ignoreRoot so as to watch node_modules/@opengovsg directory."
-  ],
-  "ignoreRoot": [".git"]
-}
