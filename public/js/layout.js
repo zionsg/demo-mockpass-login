@@ -6,7 +6,7 @@
  *
  * @global
  * @example
- *     <!-- should only be loaded once via src/web/views/layout.html in project -->
+ *     <!-- should only be loaded once via src/views/layout.html in project -->
  *     <script src="/public/js/layout.js" data-nonce="{{nonce}}"></script>
  * @param {HTMLElement} currentScript - Script element that this script is loaded in, e.g. <script src="x.js"></script>.
  * @returns {object}
