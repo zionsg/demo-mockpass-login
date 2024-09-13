@@ -19,10 +19,12 @@ const helper = require(process.env.DEMO_ROOT + 'src/helper.js');
 module.exports = (function () {
     const router = express.Router();
 
+    let sessionCookieName = 'connect.sid';
     let postLoginPage = '/demo/dashboard';
+    let redirectUri = `${process.env.DEMO_BASEURL_EXTERNAL}${postLoginPage}`;
     let layoutTemplate = fs.readFileSync(process.env.DEMO_ROOT + 'src/views/layout.html', 'utf8');
-    let singPassClient = new SingPassClient();
-    let corpPassClient = new CorpPassClient();
+    let singPassClient = new SingPassClient({ redirectUri: redirectUri });
+    let corpPassClient = new CorpPassClient({ redirectUri: redirectUri });
     let myInfoPersonalClient = new MyInfoPersonalClient();
     let myInfoPersonalRequestedAttributes = ['name', 'email', 'mobileno'];
     let myInfoBusinessClient = new MyInfoBusinessClient({
@@ -33,7 +35,7 @@ module.exports = (function () {
     // Verify if session has been authenticated with our JWT
     let isAuthenticated = function (req, res, next) {
         // data = <whatever was put in the JWT>
-        singPassClient.verifyJWT(req.cookies?.['connect.sid'], (err, data) => {
+        singPassClient.verifyJWT(req.cookies?.[sessionCookieName], (err, data) => {
             if (err) {
                 res.status(400).send('Unauthorized');
             } else {
@@ -41,6 +43,7 @@ module.exports = (function () {
                     uen: data.uen,
                     username: data.username,
                 };
+
                 next();
             }
         });
@@ -111,11 +114,11 @@ module.exports = (function () {
     router.use('/public', express.static(process.env.DEMO_ROOT + 'public'));
 
     // Login Page - if a user is logging in, redirect to SingPass/CorpPass
-    router.get('/demo/login', (req, res, next) => {
+    router.get('/demo/login', async (req, res, next) => {
         let html = helper.render(req, layoutTemplate, {
             is_login: true,
-            singpass_redirect_url: singPassClient.createRedirectURL(postLoginPage),
-            corppass_redirect_url: corpPassClient.createRedirectURL(postLoginPage),
+            singpass_redirect_url: await singPassClient.customCreateAuthUrl(req),
+            corppass_redirect_url: await corpPassClient.customCreateAuthUrl(req),
             myinfo_personal_redirect_url: myInfoPersonalClient.createRedirectURL({
                 purpose: 'Personal Info for Demo MockPass Login application',
                 requestedAttributes: myInfoPersonalRequestedAttributes,
@@ -168,7 +171,7 @@ module.exports = (function () {
                     },
                     4 * 60 * 60 * 1000
                 );
-                res.cookie('connect.sid', jwt, cookieOptions);
+                res.cookie(sessionCookieName, jwt, cookieOptions);
             }
 
             res.redirect(relayState);
@@ -206,7 +209,7 @@ module.exports = (function () {
                     },
                     4 * 60 * 60 * 1000
                 );
-                res.cookie('connect.sid', jwt, cookieOptions);
+                res.cookie(sessionCookieName, jwt, cookieOptions);
             }
 
             res.redirect(relayState);
