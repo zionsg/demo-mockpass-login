@@ -7,7 +7,7 @@
 // Set environment variables from .env (file will not override existing env vars on host machine)
 require('dotenv').config();
 process.env.DEMO_ROOT = require('path').join(__dirname, '../'); // root of repository, need trailing slash
-process.env.MOCKPASS_ROOT = `${process.env.DEMO_ROOT}/${process.env.DEMO_MOCKPASS_PATH}/`; // root of MockPass repo
+process.env.MOCKPASS_ROOT = `${process.env.DEMO_ROOT}/node_modules/@opengovsg/mockpass/`; // root of MockPass package
 
 // Import modules
 const express = require('express');

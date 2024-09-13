@@ -23,9 +23,7 @@ networks:
 services:
   mockpass-server: # MockPass server
     build:
-      # tmp/mockpass created by scripts/get-mockpass.sh which clones the MockPass repository
-      # for local access to files
-      context: ./tmp/mockpass
+      context: node_modules/@opengovsg/mockpass
       dockerfile: Dockerfile # use this file inside MockPass directory
       tags:
         - "mockpass-server"

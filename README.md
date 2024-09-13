@@ -17,6 +17,7 @@ of the repository. Shell commands are all run from the root of the repository.
 - [SingPass Developer Guide](https://api.singpass.gov.sg/developers)
     + [Displaying the SingPass QR](https://api.singpass.gov.sg/library/login/developers/tutorial1)
 - [CorpPass](https://www.developer.tech.gov.sg/products/categories/digital-identity/corppass/overview.html)
+- [Auth0 Integration with Singpass](https://auth0.com/blog/auth0-integration-with-singpass/)
 - Related open-source Node.js repositories
     + [MockPass server](https://github.com/opengovsg/mockpass)
     + [Singpass MyInfo OIDC helper](https://github.com/GovTechSG/singpass-myinfo-oidc-helper)
@@ -97,10 +98,8 @@ of the repository. Shell commands are all run from the root of the repository.
               # need to manually restart this container if code is changed locally cos modules alr loaded and
               # require() is cached, i.e. docker restart mockpass-server
               volumes:
-                # tmp/mockpass created by scripts/get-mockpass.sh which clones the MockPass repository
-                # and creates its package-lock.json needed to build the Docker image
                 - type: bind
-                  source: /mnt/c/Users/Me/localhost/www/demo-mockpass-login/tmp/mockpass/lib
+                  source: /mnt/c/Users/Me/localhost/www/demo-mockpass-login/node_modules/@opengovsg/mockpass/lib
                   target: /usr/src/mockpass/lib
 
             demo-app:

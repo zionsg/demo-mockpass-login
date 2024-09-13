@@ -10,12 +10,14 @@
   "main": "src/index.js",
   "scripts": {
     "//": [
+      "postinstall required as package-lock.json for mockpass uses outdated lock version, preventing npm ci in Dockerfile from working.",
       "ignorePatterns key in ESLint does not seem to work hence arguments passed to CLI command in NPM script.",
       "eslintConfig.globals has additions such as bootstrap, enums, layout, utils and globals used in test suites.",
       "nodemon not in devDependencies cos may be used in docker-compose.override.yml.",
       "nodemon set to watch node_modules/@opengovsg in to facilitate debugging of libraries in there."
     ],
-    "build:local": "scripts/get-mockpass.sh && DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain docker compose build --no-cache",
+    "postinstall": "if [ \"${NODE_ENV}\" != \"production\" ]; then cd ./node_modules/@opengovsg/mockpass && npm install; fi",
+    "build:local": "DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain docker compose build --no-cache",
     "dev": "nodemon src/index.js",
     "lint": "eslint '**/*.js' --ignore-pattern 'custom/' --ignore-pattern 'docs/' --ignore-pattern 'node_modules/' --ignore-pattern 'public/vendor/' --ignore-pattern 'tests/' --ignore-pattern 'tmp/' --ignore-pattern 'vendor/' --ignore-pattern '*.min.js'",
     "start": "docker compose up --no-build",
@@ -24,6 +26,7 @@
   },
   "dependencies": {
     "@govtechsg/singpass-myinfo-oidc-helper": "8.4.1",
+    "@opengovsg/mockpass": "4.3.4",
     "@opengovsg/myinfo-gov-client": "4.1.2",
     "cookie-parser": "1.4.6",
     "cors": "2.8.5",
@@ -43,7 +46,7 @@
     "verbose": true,
     "legacyWatch": true,
     "watch": [
-      "node_modules/@opengovsg",
+      "node_modules/@opengovsg/mockpass",
       "public",
       "src"
     ],
