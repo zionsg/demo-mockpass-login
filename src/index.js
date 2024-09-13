@@ -42,7 +42,8 @@ app.use('/', router);
 
         helper.logInfo(
             null,
-            `Server started at port ${internalPort}. Open http://localhost:${externalPort}/demo/login in the browser.`
+            `Server started at port ${internalPort}. `
+            + `Open http://localhost:${externalPort}/demo/web/login in the browser.`
         );
     });
     server.keepAliveTimeout = 0;

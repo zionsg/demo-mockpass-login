@@ -39,7 +39,7 @@
 
       {{^is_login}}
         <p>
-          Welcome Back, NRIC/FIN {{user.username}}!<br>
+          Welcome Back, NRIC/FIN {{user.nric}}!<br>
 
           {{#user.uen}}
             <br>Organization UEN: {{user.uen}}
@@ -52,7 +52,7 @@
           {{/user.info}}
         </p>
 
-        <p><a href="/demo/login">&lt; Back to Login Page</a></p>
+        <p><a href="/demo/web/login">&lt; Back to Login Page</a></p>
       {{/is_login}}
     </div>
 

@@ -19,8 +19,8 @@ module.exports = (function (config) {
                 `${process.env.DEMO_MOCKPASS_BASEURL_INTERNAL}/corppass/v2/.well-known/openid-configuration`,
             clientID: process.env.DEMO_MOCKPASS_CLIENT_ID,
             redirectUri: '',
-            jweDecryptKey: fs.readFileSync(`${certPath}/oidc-v2-rp-secret.json`),
-            clientAssertionSignKey: fs.readFileSync(`${certPath}/key.pem`),
+            jweDecryptKey: fs.readFileSync(`${certPath}/oidc-v2-rp-secret.json`, 'utf8'),
+            clientAssertionSignKey: fs.readFileSync(`${certPath}/key.pem`, 'utf8'),
         },
         config || {}
     ));
@@ -50,7 +50,7 @@ module.exports = (function (config) {
         // serving different purposes and are documented in the request params for the authorization endpoint in:
         //   - https://api.singpass.gov.sg/library/login/developers/tutorial1
         //   - https://stg-id.singpass.gov.sg/docs/authorization/api#_authorization_endpoint
-        let state = req.headers['X-REQUEST-ID']; // header set in src/routes.js
+        let state = 'corppass-' + req.headers['X-REQUEST-ID']; // header set in src/routes.js, prefix diff from SingPass
         let nonce = req.headers['X-REQUEST-ID']; // use the same value for convenience
         let authUrl = await client.constructAuthorizationUrl(state, nonce);
 

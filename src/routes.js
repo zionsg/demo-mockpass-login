@@ -20,7 +20,7 @@ module.exports = (function () {
     const router = express.Router();
 
     let sessionCookieName = 'connect.sid';
-    let postLoginPage = '/demo/dashboard';
+    let postLoginPage = '/demo/web/dashboard';
     let redirectUri = `${process.env.DEMO_BASEURL_EXTERNAL}${postLoginPage}`;
     let layoutTemplate = fs.readFileSync(process.env.DEMO_ROOT + 'src/views/layout.html', 'utf8');
     let singPassClient = new SingPassClient({ redirectUri: redirectUri });
@@ -31,23 +31,6 @@ module.exports = (function () {
         useDemoDefaults: true,
     });
     let myInfoBusinessRequestedAttributes = ['basic-profile', 'uinfin', 'name', 'email', 'mobileno'];
-
-    // Verify if session has been authenticated with our JWT
-    let isAuthenticated = function (req, res, next) {
-        // data = <whatever was put in the JWT>
-        singPassClient.verifyJWT(req.cookies?.[sessionCookieName], (err, data) => {
-            if (err) {
-                res.status(400).send('Unauthorized');
-            } else {
-                req.user = {
-                    uen: data.uen,
-                    username: data.username,
-                };
-
-                next();
-            }
-        });
-    };
 
     // The very 1st middleware
     router.use((req, res, next) => {
@@ -114,7 +97,7 @@ module.exports = (function () {
     router.use('/public', express.static(process.env.DEMO_ROOT + 'public'));
 
     // Login Page - if a user is logging in, redirect to SingPass/CorpPass
-    router.get('/demo/login', async (req, res, next) => {
+    router.get('/demo/web/login', async (req, res, next) => {
         let html = helper.render(req, layoutTemplate, {
             is_login: true,
             singpass_redirect_url: await singPassClient.customCreateAuthUrl(req),
@@ -135,7 +118,32 @@ module.exports = (function () {
     });
 
     // Dashboard Page
-    router.get('/demo/dashboard', isAuthenticated, (req, res, next) => {
+    router.get('/demo/web/dashboard', async (req, res, next) => {
+        // The redirect URI for the SingPass/CorpPass login will come to here, so it's here where
+        // we will receive the auth code from MockPass server
+        let code = req.query.code;
+        let state = req.query.state;
+        if (code && state) { // data passed back from logging in on MockPass website
+            if (state.startsWith('singpass')) { // state set in client
+                let tokenResponse = null;
+                let payload = null;
+                let userInfo = null;
+
+                try {
+                    tokenResponse = await singPassClient.getTokens(code);
+                    payload = await singPassClient.getIdTokenPayload(tokenResponse);
+                    userInfo = await singPassClient.extractNricAndUuidFromPayload(payload);
+
+                    req.user = userInfo;
+                    helper.logInfo(req, 'User authenticated with SingPass', req.user);
+                } catch (err) {
+                    helper.logError(req, err, { tokenResponse, payload, userInfo });
+                }
+            } else if (state.startsWith('corppass')) {
+                // do nothing yet
+            }
+        }
+
         let html = helper.render(req, layoutTemplate);
         res.status(200).send(html);
     });
@@ -143,11 +151,12 @@ module.exports = (function () {
     // Full URL for this route is the value for SINGPASS_ASSERT_ENDPOINT env var in MockPass
     // SingPass would eventually pass control back by GET-ing a pre-agreed endpoint, proceed to obtain the user's
     // identity using out-of-band (OOB) authentication
-    router.use('/demo/singpass/assert', (req, res, next) => {
+    router.use('/demo/api/singpass/assert', (req, res, next) => {
         // req.query = { SAMLart: '', RelayState: '<postLoginPage>' }
         let samlArt = req.query.SAMLart;
         let relayState = req.query.RelayState;
         let cookieOptions = { httpOnly: true };
+        helper.logInfo(req, req.path, req.query);
 
         // data = { attributes: { UserName: '<NRIC of user>', relayState: '<postLoginPage>' }
         singPassClient.getAttributes(samlArt, relayState, (err, data) => {
@@ -181,11 +190,12 @@ module.exports = (function () {
     // Full URL for this route is the value for CORPPASS_ASSERT_ENDPOINT env var in MockPass
     // CorpPass would eventually pass control back by GET-ing a pre-agreed endpoint, proceed to obtain the user's
     // identity using out-of-band (OOB) authentication
-    router.use('/demo/corppass/assert', (req, res, next) => {
+    router.use('/demo/api/corppass/assert', (req, res, next) => {
         // req.query = { SAMLart: '', RelayState: '<postLoginPage>' }
         let samlArt = req.query.SAMLart;
         let relayState = req.query.RelayState;
         let cookieOptions = { httpOnly: true };
+        helper.logInfo(req, req.path, req.query);
 
         // data = { attributes: { '<UEN of organization>': '<Base64 encoded XML info>', relayState: '<postLoginPage>' }
         corpPassClient.getAttributes(samlArt, relayState, async (err, data) => {
@@ -219,7 +229,7 @@ module.exports = (function () {
     // Full URL for this route is the value for DEMO_MYINFO_PERSONAL_ASSERT_ENDPOINT env var in .env
     // MyInfo would eventually pass control back by GET-ing a pre-agreed endpoint, proceed to obtain the user's
     // identity using out-of-band (OOB) authentication
-    router.use('/demo/myinfo-personal/assert', async (req, res, next) => {
+    router.use('/demo/api/myinfo-personal/assert', async (req, res, next) => {
         // req.query = {
         //     code: '70ad6940-2e8e-11ed-bd49-abebb0a8526f',
         //     state: 'myInfoPersonalRelayState',
@@ -228,6 +238,7 @@ module.exports = (function () {
         //     iss: 'http://localhost:5156/consent/oauth2/consent/myinfo-com'
         // }
         let code = req.query.code;
+        helper.logInfo(req, req.path, req.query);
 
         let accessToken = '';
         let result = null;
@@ -277,12 +288,13 @@ module.exports = (function () {
     // Full URL must be http://localhost:3001/callback else will not work with MyInfo Business online test server
     // (cos local MockPass does not support it yet), see
     // https://github.com/singpass/myinfobiz-demo-app/blob/master/start.bat for more info.
-    router.use('/callback', async (req, res, next) => {
+    router.use('/demo/api/callback', async (req, res, next) => {
         // req.query = {
         //     code: '78e0ab02f59464dfaa6b2ec052a66d5b499906a6',
         //     state: 'myInfoBusinessRelayState'
         // }
         let code = req.query.code;
+        helper.logInfo(req, req.path, req.query);
 
         let accessToken = '';
         let result = null;
@@ -335,13 +347,13 @@ module.exports = (function () {
     });
 
     // Healthcheck
-    router.get('/healthcheck', (req, res, next) => {
+    router.get('/healthcheck', (req, res, next) => { // no prefix
         res.status(200).send('Hello World!');
     });
 
     // Home Page - go to Login Page if user visits root
     router.get('/', (req, res, next) => {
-        res.redirect('/demo/login');
+        res.redirect('/demo/web/login');
     });
 
     return router;

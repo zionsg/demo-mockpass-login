@@ -9,7 +9,10 @@ const fs = require('fs');
  * @returns {SPCPAuthClient}
  */
 module.exports = (function (config) {
+    // There are 2 sets of keys in the JSON file used by MockPass, one used for encrypting, the other for signing,
+    // with their algorithms inferred from the `alg` property (ES256 if contains "256", ES512 if contains "512")
     let certPath = process.env.MOCKPASS_ROOT + 'static/certs';
+    let keyJson = JSON.parse(fs.readFileSync(`${certPath}/oidc-v2-rp-secret.json`, 'utf8'));
 
     // See constructor for NdiOidcHelper class in
     // https://github.com/GovTechSG/singpass-myinfo-oidc-helper/blob/master/src/singpass/singpass-helper-ndi.ts
@@ -19,10 +22,18 @@ module.exports = (function (config) {
             // on values to use for MockPass
             oidcConfigUrl:
                 `${process.env.DEMO_MOCKPASS_BASEURL_INTERNAL}/singpass/v2/.well-known/openid-configuration`,
-            clientID: process.env.DEMO_MOCKPASS_CLIENT_ID,
+            clientID: process.env.DEMO_MOCKPASS_CLIENT_ID, // SingPass requires clientID, CorpPass doesn't
             redirectUri: '',
-            jweDecryptKey: fs.readFileSync(`${certPath}/oidc-v2-rp-secret.json`),
-            clientAssertionSignKey: fs.readFileSync(`${certPath}/key.pem`),
+            jweDecryptKey: {
+                key: JSON.stringify(keyJson.keys.filter((key) => ('enc' === key.use))[0]), // must be string not object
+                format: 'json',
+                alg: 'ES256',
+            },
+            clientAssertionSignKey: {
+                key: JSON.stringify(keyJson.keys.filter((key) => ('sig' === key.use))[0]), // must be string not object
+                format: 'json',
+                alg: 'ES512',
+            },
         },
         config || {}
     ));
@@ -52,7 +63,7 @@ module.exports = (function (config) {
         // serving different purposes and are documented in the request params for the authorization endpoint in:
         //   - https://api.singpass.gov.sg/library/login/developers/tutorial1
         //   - https://stg-id.singpass.gov.sg/docs/authorization/api#_authorization_endpoint
-        let state = req.headers['X-REQUEST-ID']; // header set in src/routes.js
+        let state = 'singpass-' + req.headers['X-REQUEST-ID']; // header set in src/routes.js, prefix diff from CorpPass
         let nonce = req.headers['X-REQUEST-ID']; // use the same value for convenience
         let authUrl = await client.constructAuthorizationUrl(state, nonce);
 
