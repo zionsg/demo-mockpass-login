@@ -1,5 +1,5 @@
 // Import modules
-const { Singpass } = require('singpass-myinfo-oidc-helper');
+const { Singpass } = require('@govtechsg/singpass-myinfo-oidc-helper');
 const fs = require('fs');
 
 /**
@@ -11,10 +11,12 @@ const fs = require('fs');
 module.exports = (function (config) {
     let certPath = process.env.MOCKPASS_ROOT + 'static/certs';
 
-    return new Singpass(Object.assign(
+    return new Singpass.NdiOidcHelper(Object.assign(
         {
-            // See https://github.com/opengovsg/mockpass/blob/main/README.md#singpass-v2-ndi-oidc on values for MockPass
-            oidcConfigUrl: `${process.env.DEMO_MOCKPASS_BASEURL_EXTERNAL}/singpass/v2/.well-known/openid-configuration`,
+            // See https://github.com/opengovsg/mockpass/blob/main/README.md#singpass-v2-ndi-oidc
+            // on values to use for MockPass
+            oidcConfigUrl:
+                `${process.env.DEMO_MOCKPASS_BASEURL_EXTERNAL}/singpass/v2/.well-known/openid-configuration`,
             clientID: '',
             redirectUri: '',
             jweDecryptKey: fs.readFileSync(`${certPath}/oidc-v2-rp-secret.json`),

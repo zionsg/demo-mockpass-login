@@ -31,9 +31,6 @@ COPY --chown=node:node package* /var/lib/app/
 # Disabling progress yields 2x speed improvement - https://twitter.com/gavinjoyce/status/691773956144119808
 RUN npm set progress=false && npm ci --omit=dev
 
-# Install dependencies for MockPass - `npm ci` not used as it has no package-lock.json
-RUN cd /var/lib/app/node_modules/@opengovsg/mockpass && npm install
-
 # Using dumb-init allows proper terminating of application in Docker container
 # CMD can be overridden via `command` in docker-compose.yml while ENTRYPOINT ensures CMD/command go thru dumb-init
 # Run as non-root - see https://snyk.io/blog/10-best-practices-to-containerize-nodejs-web-applications-with-docker

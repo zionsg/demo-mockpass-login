@@ -55,10 +55,17 @@ of the repository. Shell commands are all run from the root of the repository.
       for more info).
 
 ## Installation
-- Clone this repository.
-- Copy `.env.example` to `.env` and update the values accordingly. This will be
-  read by Docker Compose and the application. The file `.env` will not be
-  committed to the repository.
+- This section is meant for software developers working on the source code
+  in this repository.
+- Clone this repository, e.g. `git clone git@github.com:zionsg/demo-mockpass-login.git`.
+- Note that `.env` and `docker-compose.override.yml` MUST be created for this
+  application to run. The creation of the files will be covered in subsequent
+  steps.
+- Copy `.env.example` to `.env`. This will be read by Docker Compose and the
+  application. The file `.env` will not be committed to the repository.
+    + To make it easier to identify which env vars were changed, and to be
+      consistent with server deployments, it is recommended that env vars
+      be overridden in `docker-compose.override.yml` instead of updating `.env`.
 - Run `npm install`.
 - To run the application locally:
     + The application should be run using Docker and Docker Compose during local
@@ -93,7 +100,7 @@ of the repository. Shell commands are all run from the root of the repository.
                 # tmp/mockpass created by scripts/get-mockpass.sh which clones the MockPass repository
                 # and creates its package-lock.json needed to build the Docker image
                 - type: bind
-                  source: /mnt/c/Users/Me/localhost/www/demo-mockpass-login/tmp/mockpass
+                  source: /mnt/c/Users/Me/localhost/www/demo-mockpass-login/tmp/mockpass/lib
                   target: /usr/src/mockpass/lib
 
             demo-app:

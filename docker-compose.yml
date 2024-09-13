@@ -24,9 +24,11 @@ services:
   mockpass-server: # MockPass server
     build:
       # tmp/mockpass created by scripts/get-mockpass.sh which clones the MockPass repository
-      # and creates its package-lock.json needed to build the Docker image
+      # for local access to files
       context: ./tmp/mockpass
       dockerfile: Dockerfile # use this file inside MockPass directory
+      tags:
+        - "mockpass-server"
     ports: # publish ports - external:internal
       # Use same port for external and internal
       - ${MOCKPASS_PORT}:${MOCKPASS_PORT}
@@ -41,6 +43,8 @@ services:
     build:
       context: . # current directory
       dockerfile: Dockerfile # use this file inside current directory
+      tags:
+        - "demo-app"
     ports: # publish ports - external:internal
       - ${DEMO_PORT_EXTERNAL}:${DEMO_PORT_INTERNAL}
     env_file:

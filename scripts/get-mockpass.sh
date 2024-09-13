@@ -1,7 +1,7 @@
 #!/bin/sh
 
 ##
-# Clone MockPass repository from GitHub and create package-lock.json needed for building its Docker image
+# Clone MockPass repository from GitHub needed for building its Docker image
 #
 # @example Run from root of this repo: scripts/get-mockpass.sh
 ##
@@ -12,13 +12,10 @@ if [ ! -d "scripts" ]; then
     exit 1
 fi
 
-if [ ! -f "tmp/mockpass/package-lock.json" ]; then
+if [ ! -f "tmp/mockpass/package-lock.json" ] || [ ! -d "tmp/mockpass/.git" ]; then
     mkdir -p tmp
     cd tmp
     git clone git@github.com:opengovsg/mockpass.git
-    cd mockpass
-    npm install
-    cd ../../
 fi
 
-echo "MockPass repository cloned with package-lock.json created."
+echo "MockPass repository cloned to tmp/mockpass directory."

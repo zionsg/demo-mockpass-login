@@ -10,10 +10,12 @@
   "main": "src/index.js",
   "scripts": {
     "//": [
+      "ignorePatterns key in ESLint does not seem to work hence arguments passed to CLI command in NPM script.",
+      "eslintConfig.globals has additions such as bootstrap, enums, layout, utils and globals used in test suites.",
       "nodemon not in devDependencies cos may be used in docker-compose.override.yml.",
       "nodemon set to watch node_modules/@opengovsg in to facilitate debugging of libraries in there."
     ],
-    "build:local": "scripts/get-mockpass.sh && DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain docker compose build --no-cache && docker compose up",
+    "build:local": "scripts/get-mockpass.sh && DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain docker compose build --no-cache",
     "dev": "nodemon src/index.js",
     "lint": "eslint '**/*.js' --ignore-pattern 'custom/' --ignore-pattern 'docs/' --ignore-pattern 'node_modules/' --ignore-pattern 'public/vendor/' --ignore-pattern 'tests/' --ignore-pattern 'tmp/' --ignore-pattern 'vendor/' --ignore-pattern '*.min.js'",
     "start": "docker compose up --no-build",
