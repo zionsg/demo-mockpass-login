@@ -200,7 +200,7 @@ module.exports = (function () {
                 if ('mobileno' === attribute) {
                     myinfo[attribute] = (result.data[attribute].prefix?.value || '')
                         + (result.data[attribute].areacode?.value || '')
-                        + (result.data[attribute].nbr?.value || '')
+                        + (result.data[attribute].nbr?.value || '');
                 }
             });
         }
