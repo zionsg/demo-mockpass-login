@@ -98,5 +98,52 @@ module.exports = (function (config) {
         );
     };
 
+    /**
+     * Decrypt JWE (JSON Web Encryption)
+     *
+     * This overrides _decryptJWE() in MyInfoGovClient.class.ts to cater for the payload
+     * not wrapped in quotes due to MockPass switching to jose NPM package in
+     * https://github.com/opengovsg/mockpass/blob/v4.3.4/lib/express/myinfo/controllers.js versus
+     * the payload being wrapped in quotes when node-jose NPM package was used in
+     * https://github.com/opengovsg/mockpass/blob/v4.0.7/lib/express/myinfo/controllers.js
+     *
+     * @public
+     * @link Adapted from _decryptJWE() in
+     *     https://github.com/opengovsg/myinfo-gov-client/blob/v4.1.2/src/MyInfoGovClient.class.ts
+     *     which in turn is from https://api.singpass.gov.sg/library/myinfo/developers/tutorial2
+     * @param {string} Fullstop-delimited JWE.
+     * @returns {Promise<object>} The decrypted data, with signature already verified.
+     * @throws {Error} Throws if error decrypting JWE.
+     */
+    client._decryptJWE = async function (jwe) {
+        const jose = require('node-jose');
+        const jsonwebtoken = require('jsonwebtoken');
+
+        let keystore = await jose.JWK.createKeyStore().add(
+            client.clientPrivateKey,
+            'pem',
+        );
+        let { payload } = await jose.JWE.createDecrypt(keystore).decrypt(jwe);
+
+        let jwt;
+        try {
+            // The JSON.parse here is important, as the payload is wrapped in quotes
+            jwt = JSON.parse(payload.toString());
+        } catch (err) {
+            // JSON.parse() will throw error if payload is not wrapped in quotes, hence just set to payload
+            jwt = payload.toString();
+        }
+
+        let decoded = jsonwebtoken.verify(jwt, client.myInfoPublicKey, {
+            algorithms: ['RS256'],
+        });
+
+        if (typeof decoded !== 'object') {
+            throw new Error('WrongDataShapeError');
+        }
+
+        return decoded;
+    };
+
     return client;
 });
