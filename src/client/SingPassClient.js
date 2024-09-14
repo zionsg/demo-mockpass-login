@@ -14,7 +14,7 @@ module.exports = (function (config) {
     let certPath = process.env.MOCKPASS_ROOT + 'static/certs';
     let keyJson = JSON.parse(fs.readFileSync(`${certPath}/oidc-v2-rp-secret.json`, 'utf8'));
 
-    // See constructor for NdiOidcHelper class in
+    // See documentation for constructor for NdiOidcHelper class in
     // https://github.com/GovTechSG/singpass-myinfo-oidc-helper/blob/master/src/singpass/singpass-helper-ndi.ts
     let client = new Singpass.NdiOidcHelper(Object.assign(
         {
@@ -34,6 +34,8 @@ module.exports = (function (config) {
                 format: 'json',
                 alg: 'ES512',
             },
+            // Commented out as not used
+            // proxyConfig: null,
         },
         config || {}
     ));

@@ -27,37 +27,27 @@
           (uses MyInfo Business online test server cos local MockPass server does not support it yet,
           select user and click "Agree" when prompted)
         </p>
-
-        <p>
-          <div class="text-center"><i>
-            Unfortunately, QR generation only works if domain is registered with SingPass else CORS error
-          </i></div>
-          <div id="singpass-qr"></div>
-          <div id="corppass-qr"></div>
-        </p>
       {{/is_login}}
 
       {{^is_login}}
         <p>
-          Welcome Back, NRIC/FIN {{user.nric}}!<br>
+          Welcome Back, NRIC/FIN {{user.nric}} {{#user.name}}({{user.name}}){{/user.name}}<br>
 
           {{#user.uen}}
-            <br>Organization UEN: {{user.uen}}
+            <br>Organisation UEN: {{user.uen}}
           {{/user.uen}}
 
-          {{#user.info}}
+          {{#user.myinfo}}
             <br>Name: {{name}}
             <br>Email: {{email}}
             <br>Mobile: {{mobileno}}
-          {{/user.info}}
+          {{/user.myinfo}}
         </p>
 
         <p><a href="/demo/web/login">&lt; Back to Login Page</a></p>
       {{/is_login}}
     </div>
 
-    {{! The NDI script is from https://stg-id.singpass.gov.sg/docs/embedded-auth/js - cannot be self-hosted }}
-    <script src="https://stg-id.singpass.gov.sg/static/ndi_embedded_auth.js"></script>
-    <script src="/public/js/layout.js" data-nonce="{{nonce}}"></script>
+    <script src="/public/js/layout.js"></script>
   </body>
 </html>

@@ -38,33 +38,6 @@ module.exports = (function () {
         let requestId = Date.now() + '-' + helper.getUuid();
         req.headers['X-REQUEST-ID'] = requestId;
 
-        // Set HTTP security headers
-        // See https://stg-id.singpass.gov.sg/docs/embedded-auth/js#_content_security_policy_csp_requirements
-        // Need to put nonce in script tags else inline scripts will not load, e.g. <script nonce="{{nonce}}">,
-        // same for style tags, e.g. <style nonce="{{nonce}}">.
-        res.set('strict-transport-security', 'max-age=63072000; includeSubdomains; preload');
-        res.set(
-            'content-security-policy',
-            "default-src 'none'; "
-            + "connect-src 'self' https://*.singpass.gov.sg; " // "self" allows AJAX request to self
-            // img-src allows self-hosted images, "data:" URIs and SVG
-            + "img-src 'self' data: w3.org/svg/2000 https://*.singpass.gov.sg; "
-            + "object-src 'none'; "
-            // allow inline scripts using nonce - note that if nonce is "abc", value for script-src is "nonce-abc"
-            // but script tag would be <script nonce="abc"> not <script nonce="nonce-abc">
-            + `script-src 'self' 'nonce-${requestId}' https://*.singpass.gov.sg; `
-            // allow Google Fonts to load and inline stylesheets using nonce - note that if nonce is "abc", value for
-            // style-src is "nonce-abc" but style tag would be <style nonce="abc"> not <style nonce="nonce-abc">
-            + `style-src 'self' 'nonce-${requestId}' fonts.googleapis.com https://*.singpass.gov.sg; `
-            // allow self-hosted fonts and Google Fonts to load
-            + "font-src 'self' fonts.gstatic.com; "
-            + "form-action 'self'; "
-            + "frame-ancestors 'none'; "
-        );
-        res.set('x-content-type-options', 'nosniff');
-        res.set('x-frame-options', 'DENY');
-        res.set('x-xss-protection', '1; mode=block');
-
         next();
     });
 
@@ -124,23 +97,46 @@ module.exports = (function () {
         let code = req.query.code;
         let state = req.query.state;
         if (code && state) { // data passed back from logging in on MockPass website
-            if (state.startsWith('singpass')) { // state set in client
-                let tokenResponse = null;
-                let payload = null;
-                let userInfo = null;
+            let tokenResponse = null;
+            let idTokenPayload = null;
+            let userInfo = null;
 
+            if (state.startsWith('singpass')) { // state set in client
                 try {
                     tokenResponse = await singPassClient.getTokens(code);
-                    payload = await singPassClient.getIdTokenPayload(tokenResponse);
-                    userInfo = await singPassClient.extractNricAndUuidFromPayload(payload);
+                    idTokenPayload = await singPassClient.getIdTokenPayload(tokenResponse);
+                    userInfo = await singPassClient.extractNricAndUuidFromPayload(idTokenPayload);
 
                     req.user = userInfo;
-                    helper.logInfo(req, 'User authenticated with SingPass', req.user);
+                    helper.logInfo(req, 'User authenticated with SingPass', req.user, idTokenPayload);
                 } catch (err) {
-                    helper.logError(req, err, { tokenResponse, payload, userInfo });
+                    helper.logError(
+                        req,
+                        'Error with SingPass authentication',
+                        err,
+                        { tokenResponse, idTokenPayload, userInfo }
+                    );
                 }
             } else if (state.startsWith('corppass')) {
-                // do nothing yet
+                try {
+                    tokenResponse = await corpPassClient.getTokens(code);
+                    idTokenPayload = await corpPassClient.getIdTokenPayload(tokenResponse);
+                    userInfo = await corpPassClient.extractInfoFromIdTokenSubject(idTokenPayload);
+
+                    // Interestingly, the idTokenPayload for CorpPass contains userInfo and entityInfo, hence using it
+                    req.user = Object.assign(userInfo, {
+                        name: idTokenPayload.userInfo.CPUID_FullName,
+                        uen: idTokenPayload.entityInfo.CPEntID,
+                    });
+                    helper.logInfo(req, 'User authenticated with CorpPass', req.user, idTokenPayload);
+                } catch (err) {
+                    helper.logError(
+                        req,
+                        'Error with CorpPass authentication',
+                        err,
+                        { tokenResponse, idTokenPayload, userInfo }
+                    );
+                }
             }
         }
 

@@ -1,9 +1,6 @@
 /**
  * Layout script containing common client-side helper functions
  *
- * Custom HTML attributes for script element:
- * - data-nonce: Nonce for use with Content Security Policy.
- *
  * @global
  * @example
  *     <!-- should only be loaded once via src/views/layout.html in project -->
@@ -15,13 +12,11 @@ const layout = (function (currentScript) { // not using `var` so that there will
     /** @type {object} Self reference - public properties/methods stored here & returned as public interface. */
     const self = {}; // methods attached to this are ordered alphabetically
 
-    let nonce = currentScript.getAttribute('data-nonce');
-
     /**
      * Initialization on page load
      */
     window.addEventListener('DOMContentLoaded', () => {
-        initQr();
+        // Nothing for not
     });
 
     /**
@@ -45,53 +40,6 @@ const layout = (function (currentScript) { // not using `var` so that there will
     self.logInfo = function (...args) {
         log(args, 'info');
     };
-
-    /**
-     * Initialize QR codes
-     *
-     * @todo Currently getting CORS errors when running this script, probably need to register
-     *     domain with SingPass in order to whitelist it.
-     *
-     * @private
-     * @link Adapted from https://stg-id.singpass.gov.sg/docs/embedded-auth/js#_sample_html_with_ndi_embedded_auth_js
-     * @returns {void}
-     */
-    function initQr() {
-        let authParamsSupplier = async function () {
-            // Replace the below with an `await`ed call to initiate an auth session on your backend
-            // which will generate state+nonce values
-            return {
-                state: btoa(nonce), // must be base64-encoded
-                nonce: nonce,
-            };
-        };
-
-        let onError = function (errorId, message) {
-            self.logError(`onError. errorId:${errorId} message:${message}`);
-        };
-
-        try {
-            let initAuthSessionResponse = window.NDI.initAuthSession(
-                'singpass-qr',
-                {
-                    clientId: 'T5sM5a53Yaw3URyDEv2y9129CbElCN2F', // Replace with your client ID
-                    redirectUri: ' https://mockpass.ap.ngrok.io', // Replace with a registered redirect URI
-                    scope: 'openid',
-                    responseType: 'code',
-                },
-                authParamsSupplier,
-                onError,
-                {
-                    renderDownloadLink: true,
-                    appLaunchUrl: 'https://partner.gov.sg' // Replace with your iOS/Android App Link
-                }
-            );
-
-            self.logInfo('initAuthSession', initAuthSessionResponse);
-        } catch (err) {
-            self.logError('initAuthSession', err);
-        }
-    }
 
     /**
      * Centralized client-side logging function

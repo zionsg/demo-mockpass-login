@@ -9,18 +9,35 @@ const fs = require('fs');
  * @returns {SPCPAuthClient}
  */
 module.exports = (function (config) {
+    // There are 2 sets of keys in the JSON file used by MockPass, one used for encrypting, the other for signing,
+    // with their algorithms inferred from the `alg` property (ES256 if contains "256", ES512 if contains "512")
     let certPath = process.env.MOCKPASS_ROOT + 'static/certs';
+    let keyJson = JSON.parse(fs.readFileSync(`${certPath}/oidc-v2-rp-secret.json`, 'utf8'));
 
+    // See documentation for constructor for NdiOidcHelper class in
+    // https://github.com/GovTechSG/singpass-myinfo-oidc-helper/blob/master/src/corppass/corppass-helper-ndi.ts
     let client = new Corppass.NdiOidcHelper(Object.assign(
         {
             // See https://github.com/opengovsg/mockpass/blob/main/README.md#corppass-v2-corppass-oidc
             // on values to use for MockPass
             oidcConfigUrl:
                 `${process.env.DEMO_MOCKPASS_BASEURL_INTERNAL}/corppass/v2/.well-known/openid-configuration`,
-            clientID: process.env.DEMO_MOCKPASS_CLIENT_ID,
+            clientID: process.env.DEMO_MOCKPASS_CLIENT_ID, // SingPass requires clientID, CorpPass doesn't
             redirectUri: '',
-            jweDecryptKey: fs.readFileSync(`${certPath}/oidc-v2-rp-secret.json`, 'utf8'),
-            clientAssertionSignKey: fs.readFileSync(`${certPath}/key.pem`, 'utf8'),
+            jweDecryptKey: {
+                key: JSON.stringify(keyJson.keys.filter((key) => ('enc' === key.use))[0]), // must be string not object
+                format: 'json',
+                alg: 'ES256',
+            },
+            clientAssertionSignKey: {
+                key: JSON.stringify(keyJson.keys.filter((key) => ('sig' === key.use))[0]), // must be string not object
+                format: 'json',
+                alg: 'ES512',
+            },
+            // Commented out as not used
+            // proxyConfig: null,
+            // additionalHeaders: null,
+            // proxyBaseUrl: '',
         },
         config || {}
     ));
