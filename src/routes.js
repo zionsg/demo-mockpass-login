@@ -75,7 +75,7 @@ module.exports = (function () {
             is_login: true,
             singpass_redirect_url: await singPassClient.customCreateAuthUrl(req),
             corppass_redirect_url: await corpPassClient.customCreateAuthUrl(req),
-            myinfo_personal_redirect_url: myInfoPersonalClient.createRedirectURL({
+            myinfo_personal_redirect_url: myInfoPersonalClient.customCreateRedirectUrl(req, {
                 purpose: 'Personal Info for Demo MockPass Login application',
                 requestedAttributes: myInfoPersonalRequestedAttributes,
                 relayState: 'myInfoPersonalRelayState',
@@ -144,84 +144,6 @@ module.exports = (function () {
         res.status(200).send(html);
     });
 
-    // Full URL for this route is the value for SINGPASS_ASSERT_ENDPOINT env var in MockPass
-    // SingPass would eventually pass control back by GET-ing a pre-agreed endpoint, proceed to obtain the user's
-    // identity using out-of-band (OOB) authentication
-    router.use('/demo/api/singpass/assert', (req, res, next) => {
-        // req.query = { SAMLart: '', RelayState: '<postLoginPage>' }
-        let samlArt = req.query.SAMLart;
-        let relayState = req.query.RelayState;
-        let cookieOptions = { httpOnly: true };
-        helper.logInfo(req, req.path, req.query);
-
-        // data = { attributes: { UserName: '<NRIC of user>', relayState: '<postLoginPage>' }
-        singPassClient.getAttributes(samlArt, relayState, (err, data) => {
-            if (err) {
-                // Indicate through cookies or headers that an error has occurred
-                helper.logError(req, err);
-                res.cookie('login.error', err.message, cookieOptions);
-            } else {
-                // If all is well and login occurs, the attributes are given
-                // In all cases, the relayState as provided in getAttributes() is given
-                // For SingPass, a username will be given
-                let relayState = data.relayState;
-                let attributes = data.attributes;
-                let username = attributes.UserName;
-
-                // Embed a session cookie or pass back some Authorization bearer token
-                let jwt = singPassClient.createJWT(
-                    {
-                        is_singpass: true,
-                        username: username,
-                    },
-                    4 * 60 * 60 * 1000
-                );
-                res.cookie(sessionCookieName, jwt, cookieOptions);
-            }
-
-            res.redirect(relayState);
-        });
-    });
-
-    // Full URL for this route is the value for CORPPASS_ASSERT_ENDPOINT env var in MockPass
-    // CorpPass would eventually pass control back by GET-ing a pre-agreed endpoint, proceed to obtain the user's
-    // identity using out-of-band (OOB) authentication
-    router.use('/demo/api/corppass/assert', (req, res, next) => {
-        // req.query = { SAMLart: '', RelayState: '<postLoginPage>' }
-        let samlArt = req.query.SAMLart;
-        let relayState = req.query.RelayState;
-        let cookieOptions = { httpOnly: true };
-        helper.logInfo(req, req.path, req.query);
-
-        // data = { attributes: { '<UEN of organization>': '<Base64 encoded XML info>', relayState: '<postLoginPage>' }
-        corpPassClient.getAttributes(samlArt, relayState, async (err, data) => {
-            if (err) {
-                // Indicate through cookies or headers that an error has occurred
-                helper.logError(req, err);
-                res.cookie('login.error', err.message, cookieOptions);
-            } else {
-                let relayState = data.relayState;
-                let attributes = data.attributes;
-                let uen = Object.keys(attributes)?.[0];
-                let info = await helper.xmlToJson(attributes[uen], true);
-                let username = info?.UserInfo?.CPUID?.[0];
-
-                // Embed a session cookie or pass back some Authorization bearer token
-                let jwt = corpPassClient.createJWT(
-                    {
-                        is_corppass: true,
-                        uen: uen,
-                        username: username,
-                    },
-                    4 * 60 * 60 * 1000
-                );
-                res.cookie(sessionCookieName, jwt, cookieOptions);
-            }
-
-            res.redirect(relayState);
-        });
-    });
-
     // Full URL for this route is the value for DEMO_MYINFO_PERSONAL_ASSERT_ENDPOINT env var in .env
     // MyInfo would eventually pass control back by GET-ing a pre-agreed endpoint, proceed to obtain the user's
     // identity using out-of-band (OOB) authentication
@@ -247,33 +169,46 @@ module.exports = (function () {
 
         try {
             // @todo See https://github.com/opengovsg/mockpass/issues/430
-            // This throws "Signature verification failed" error cos getPerson() computes the
-            // signature with sp_esvcId query param in the url while pki() in
-            // https://github.com/opengovsg/mockpass/blob/master/lib/crypto/myinfo-signature.js
+            // This throws "Signature verification failed" error cos getPerson() in
+            // https://github.com/opengovsg/myinfo-gov-client/blob/develop/src/MyInfoGovClient.class.ts
+            // computes the signature with sp_esvcId query param in the URL while pki() in
+            // https://github.com/opengovsg/mockpass/blob/main/lib/crypto/myinfo-signature.js
             // omits the sp_esvcId query param when returning baseString for /person endpoint,
             // causing verify() in
-            // https://github.com/opengovsg/mockpass/blob/master/lib/express/myinfo/controllers.js
+            // https://github.com/opengovsg/mockpass/blob/main/lib/express/myinfo/controllers.js
             // to use the wrong baseString when computing the signature
-            result = await myInfoPersonalClient.getPerson(accessToken, myInfoPersonalRequestedAttributes);
+            result = await myInfoPersonalClient.getPerson(
+                accessToken,
+                myInfoPersonalRequestedAttributes,
+                myInfoPersonalClient.singpassEserviceId
+            );
+
+            helper.logInfo(req, 'User authenticated with MyInfo Personal', JSON.stringify(result));
         } catch (err) {
             helper.logError(req, 'getPerson', err);
             result = null;
         }
 
-        let username = '';
-        let info = null;
+        let nric = '';
+        let myinfo = null;
         if (result?.data) {
-            username = result.uinFin;
-            info = {};
+            nric = result.uinFin;
+            myinfo = {};
             Object.keys(result.data).forEach((attribute) => {
-                info[attribute] = result.data[attribute].value;
+                myinfo[attribute] = result.data[attribute].value;
+
+                if ('mobileno' === attribute) {
+                    myinfo[attribute] = (result.data[attribute].prefix?.value || '')
+                        + (result.data[attribute].areacode?.value || '')
+                        + (result.data[attribute].nbr?.value || '')
+                }
             });
         }
 
         let html = helper.render(req, layoutTemplate, {
             user: {
-                username: username,
-                info: info,
+                nric: nric,
+                myinfo: myinfo,
             },
         });
 

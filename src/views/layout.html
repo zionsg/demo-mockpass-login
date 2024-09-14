@@ -18,8 +18,11 @@
         <p><a href="{{{singpass_redirect_url}}}">Login using SingPass website</a></p>
         <p><a href="{{{corppass_redirect_url}}}">Login using CorpPass website</a></p>
         <p>
-          <a href="{{{myinfo_personal_redirect_url}}}">Retrieve profile from MyInfo Personal</a>
-          <br>(select user with "[MyInfo]" on MockPass website and click "Agree" when prompted)
+          <a href="{{{myinfo_personal_redirect_url}}}">Retrieve profile from MyInfo Personal</a><br>
+          (select username <code>S9812379B [MyInfo]</code> from dropdown on MockPass website and
+          click "Agree" when prompted - only entries in
+          <a target="_blank" href="https://github.com/opengovsg/mockpass/blob/main/static/myinfo/v3.json">
+          Mockpass's personas dataset</a> will succeed)
         </p>
         <p>
           <a href="{{{myinfo_business_redirect_url}}}">Retrieve profile from MyInfo Business</a>
@@ -31,16 +34,27 @@
 
       {{^is_login}}
         <p>
-          Welcome Back, NRIC/FIN {{user.nric}} {{#user.name}}({{user.name}}){{/user.name}}<br>
+          Welcome Back
+
+          {{#user.nric}}
+            <p>
+              NRIC/FIN {{user.nric}}
+              {{#user.name}}({{user.name}}){{/user.name}}
+            </p>
+          {{/user.nric}}
 
           {{#user.uen}}
-            <br>Organisation UEN: {{user.uen}}
+            <p>
+              Organisation UEN: {{user.uen}}
+            </p>
           {{/user.uen}}
 
           {{#user.myinfo}}
-            <br>Name: {{name}}
-            <br>Email: {{email}}
-            <br>Mobile: {{mobileno}}
+            <p>
+              Name: {{name}}<br>
+              Email: {{email}}<br>
+              Mobile: {{mobileno}}<br>
+            </p>
           {{/user.myinfo}}
         </p>
 

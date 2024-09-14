@@ -47,6 +47,8 @@
     "legacyWatch": true,
     "watch": [
       "node_modules/@opengovsg/mockpass",
+      "node_modules/@opengovsg/myinfo-gov-client",
+      "node_modules/@govtechsg/singpass-myinfo-oidc-helper",
       "public",
       "src"
     ],

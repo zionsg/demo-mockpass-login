@@ -123,6 +123,11 @@ of the repository. Shell commands are all run from the root of the repository.
                 - type: bind
                   source: /mnt/c/Users/Me/localhost/www/demo-mockpass-login/tmp
                   target: /var/lib/app/tmp
+
+                # Read from local copy to allow debugging
+                - type: bind
+                  source: /home/zion/localhost/www/demo-mockpass-login/node_modules/@opengovsg/myinfo-gov-client
+                  target: /var/lib/app/node_modules/@opengovsg/myinfo-gov-client
               # This command uses Nodemon which is listed as a production dependency
               # cos container does not install devDependencies and node_modules are
               # read from container not host
