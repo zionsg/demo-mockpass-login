@@ -168,21 +168,7 @@ module.exports = (function () {
         }
 
         try {
-            // @todo See https://github.com/opengovsg/mockpass/issues/430
-            // This throws "Signature verification failed" error cos getPerson() in
-            // https://github.com/opengovsg/myinfo-gov-client/blob/develop/src/MyInfoGovClient.class.ts
-            // computes the signature with sp_esvcId query param in the URL while pki() in
-            // https://github.com/opengovsg/mockpass/blob/main/lib/crypto/myinfo-signature.js
-            // omits the sp_esvcId query param when returning baseString for /person endpoint,
-            // causing verify() in
-            // https://github.com/opengovsg/mockpass/blob/main/lib/express/myinfo/controllers.js
-            // to use the wrong baseString when computing the signature
-            result = await myInfoPersonalClient.getPerson(
-                accessToken,
-                myInfoPersonalRequestedAttributes,
-                myInfoPersonalClient.singpassEserviceId
-            );
-
+            result = await myInfoPersonalClient.getPerson(accessToken, myInfoPersonalRequestedAttributes);
             helper.logInfo(req, 'User authenticated with MyInfo Personal', JSON.stringify(result));
         } catch (err) {
             helper.logError(req, 'getPerson', err);
