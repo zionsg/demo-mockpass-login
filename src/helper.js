@@ -1,7 +1,6 @@
 // Import modules
 const crypto = require('crypto');
 const mustache = require('mustache');
-const xml2js = require('xml2js');
 
 /**
  * Common server-side helper functions
@@ -75,37 +74,6 @@ module.exports = (function () {
             ),
             partials || {}
         );
-    };
-
-    /**
-     * Convert XML to JSON
-     *
-     * @public
-     * @param {string} xml
-     * @param {boolean} isBase64Encoded=false - Whether XML is Base64 encoded.
-     * @returns {Promise<(null|object)>} Null returned if error.
-     */
-    self.xmlToJson = async function (xml, isBase64Encoded = false) {
-        if (isBase64Encoded) {
-            try {
-                xml = atob(xml);
-            } catch (err) {
-                self.logError(null, err);
-                return null;
-            }
-        }
-
-        return new Promise((resolve, reject) => {
-            xml2js.parseString(xml, { trim: true }, (err, result) => {
-                if (err) {
-                    self.logError(null, err);
-                    resolve(null); // don't use reject else caller has to wrap call in try/catch
-                    return;
-                }
-
-                resolve(result);
-            });
-        });
     };
 
     /**

@@ -34,10 +34,9 @@
     "express": "4.21.0",
     "jsonwebtoken": "9.0.2",
     "mustache": "4.2.0",
-    "myinfo-tutorial-app": "github:singpass/myinfobiz-demo-app#27eaa04",
+    "myinfo-demo-app": "github:singpass/myinfobiz-demo-app-v3#d083f87",
     "node-jose": "2.2.0",
-    "nodemon": "3.1.4",
-    "xml2js": "0.6.2"
+    "nodemon": "3.1.4"
   },
   "devDependencies": {
     "eslint": "8.43.0"
@@ -46,9 +45,9 @@
     "verbose": true,
     "legacyWatch": true,
     "watch": [
+      "node_modules/@govtechsg/singpass-myinfo-oidc-helper",
       "node_modules/@opengovsg/mockpass",
       "node_modules/@opengovsg/myinfo-gov-client",
-      "node_modules/@govtechsg/singpass-myinfo-oidc-helper",
       "public",
       "src"
     ],

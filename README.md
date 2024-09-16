@@ -15,15 +15,18 @@ of the repository. Shell commands are all run from the root of the repository.
 ## References
 - [MockPass - a mock SingPass/CorpPass server for testing in development](https://medium.com/open-government-products/mockpass-a-mock-singpass-corppass-server-for-testing-in-development-a583193c898c)
 - [SingPass Developer Guide](https://api.singpass.gov.sg/developers)
-    + [Displaying the SingPass QR](https://api.singpass.gov.sg/library/login/developers/tutorial1)
+    + [Auth0 Integration with Singpass](https://auth0.com/blog/auth0-integration-with-singpass/)
 - [CorpPass](https://www.developer.tech.gov.sg/products/categories/digital-identity/corppass/overview.html)
-- [Auth0 Integration with Singpass](https://auth0.com/blog/auth0-integration-with-singpass/)
+- MyInfo:
+    + [MyInfo API v3](https://public.cloud.myinfo.gov.sg/myinfo/api/myinfo-kyc-v3.2.html)
+    + [MyInfo API v4](https://public.cloud.myinfo.gov.sg/myinfo/api/myinfo-kyc-v4.0.html)
 - Related open-source Node.js repositories
     + [MockPass server](https://github.com/opengovsg/mockpass)
     + [Singpass MyInfo OIDC helper](https://github.com/GovTechSG/singpass-myinfo-oidc-helper)
     + [MyInfo client](https://github.com/opengovsg/myinfo-gov-client)
     + [MyInfo Demo App](https://github.com/ndi-trusted-data/myinfo-demo-app)
     + [MyInfo Business Demo App](https://github.com/singpass/myinfobiz-demo-app)
+    + [MyInfo Connector NodeJS](https://github.com/singpass/myinfo-connector-v4-nodejs)
 
 ## Requirements
 - [Docker Engine](https://docs.docker.com/engine/release-notes/) >= 20.10.7
