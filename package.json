@@ -1,6 +1,6 @@
 {
   "name": "demo-mockpass-login",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Website to demo SingPass/CorpPass login using MockPass server",
   "homepage": "https://github.com/zionsg/demo-mockpass-login",
   "repository": {
@@ -48,6 +48,7 @@
       "node_modules/@govtechsg/singpass-myinfo-oidc-helper",
       "node_modules/@opengovsg/mockpass",
       "node_modules/@opengovsg/myinfo-gov-client",
+      "node_modules/myinfo-tutorial-app/ssl",
       "public",
       "src"
     ],
