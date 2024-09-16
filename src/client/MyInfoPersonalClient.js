@@ -101,6 +101,7 @@ module.exports = (function (config) {
     /**
      * Decrypt JWE (JSON Web Encryption)
      *
+     * See https://github.com/opengovsg/mockpass/issues/692
      * This overrides _decryptJWE() in MyInfoGovClient.class.ts to cater for the payload
      * not wrapped in quotes due to MockPass switching to jose NPM package in
      * https://github.com/opengovsg/mockpass/blob/v4.3.4/lib/express/myinfo/controllers.js versus
@@ -125,15 +126,7 @@ module.exports = (function (config) {
         );
         let { payload } = await jose.JWE.createDecrypt(keystore).decrypt(jwe);
 
-        let jwt;
-        try {
-            // The JSON.parse here is important, as the payload is wrapped in quotes
-            jwt = JSON.parse(payload.toString());
-        } catch (err) {
-            // JSON.parse() will throw error if payload is not wrapped in quotes, hence just set to payload
-            jwt = payload.toString();
-        }
-
+        let jwt = payload.toString().replaceAll('"', ''); // remove quotes if any
         let decoded = jsonwebtoken.verify(jwt, client.myInfoPublicKey, {
             algorithms: ['RS256'],
         });
