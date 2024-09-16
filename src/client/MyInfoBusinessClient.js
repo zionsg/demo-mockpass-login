@@ -201,6 +201,12 @@ module.exports = (function (config) {
     /**
      * Decrypt JWE (JSON Web Encryption)
      *
+     * See https://github.com/opengovsg/mockpass/issues/692
+     * This caters for the payload not wrapped in quotes due to MockPass switching to jose NPM package in
+     * https://github.com/opengovsg/mockpass/blob/v4.3.4/lib/express/myinfo/controllers.js versus
+     * the payload being wrapped in quotes when node-jose NPM package was used in
+     * https://github.com/opengovsg/mockpass/blob/v4.0.7/lib/express/myinfo/controllers.js
+     *
      * @private
      * @link From decryptJWE() in https://github.com/singpass/myinfobiz-demo-app/blob/master/lib/securityHelper.js
      *     which in turn is from https://api.singpass.gov.sg/library/myinfobiz/developers/tutorial3
@@ -234,7 +240,8 @@ module.exports = (function (config) {
                     jose.JWE.createDecrypt(jweKey)
                         .decrypt(data)
                         .then((result) => {
-                            resolve(JSON.parse(result.payload.toString()));
+                            let jwt = result.payload.toString().replaceAll('"', ''); // remove quotes if any
+                            resolve(jwt);
                         })
                         .catch((err) => {
                             self.config.logger(LOG_ERROR, err.message, err);
@@ -448,18 +455,20 @@ module.exports = (function (config) {
     // Initialization
     (function init() {
         if (self.config.useDemoDefaults) {
-            // MockPass does not support MyInfo Business at this point of time
+            // MockPass does not support MyInfo Business at this point of time.
             // The MyInfo Business online test server only responds to specific credentials and certificates,
-            // namely those in https://github.com/singpass/myinfobiz-demo-app/blob/master/start.sh
-            // hence using them here. Note that `npm install https://github.com/singpass/myinfobiz-demo-app`
-            // installs to node_modules/myinfo-tutorial-app not node_modules/singpass/myinfobiz-demo-app
-            let certPath = process.env.DEMO_ROOT + 'node_modules/myinfo-tutorial-app/ssl';
+            // namely those in https://github.com/singpass/myinfobiz-demo-app-v3/blob/main/config/config.js
+            // hence using them here. Note that `npm install https://github.com/singpass/myinfobiz-demo-app-v3`
+            // installs to `node_modules/myinfo-demo-app` not `node_modules/myinfobiz-demo-app-v3`.
+            let clientCertPath = process.env.DEMO_ROOT + 'node_modules/myinfo-demo-app/cert';
+            let mockpassCertPath = process.env.MOCKPASS_ROOT + 'static/certs';
+
             self.config = Object.assign(self.config, {
                 clientId: 'STG2-MYINFOBIZ-SELF-TEST',
                 clientSecret: '44d953c796cccebcec9bdc826852857ab412fbe2',
                 redirectEndpoint: process.env.DEMO_MYINFO_BUSINESS_ASSERT_ENDPOINT,
-                clientPrivateKey: fs.readFileSync(`${certPath}/your-sample-app-private-key.pem`),
-                myInfoPublicKey: fs.readFileSync(`${certPath}/staging-myinfo-public-cert.pem`),
+                clientPrivateKey: fs.readFileSync(`${clientCertPath}/your-sample-app-signing-private-key.pem`),
+                myInfoPublicKey: fs.readFileSync(`${mockpassCertPath}/spcp.crt`),
                 // not using sandbox.api.myinfo.gov.sg cos that does not return encrypted response like production
                 myInfoApiBaseUrl: 'https://test.api.myinfo.gov.sg/biz/v2',
             });

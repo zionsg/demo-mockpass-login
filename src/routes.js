@@ -156,7 +156,7 @@ module.exports = (function () {
         //     iss: 'http://localhost:5156/consent/oauth2/consent/myinfo-com'
         // }
         let code = req.query.code;
-        helper.logInfo(req, req.path, req.query);
+        helper.logInfo(req, req.originalUrl, req.query);
 
         let accessToken = '';
         let result = null;
@@ -204,14 +204,14 @@ module.exports = (function () {
     // Full URL for this route is the value for DEMO_MYINFO_BUSINESS_ASSERT_ENDPOINT env var in .env
     // Full URL must be http://localhost:3001/callback else will not work with MyInfo Business online test server
     // (cos local MockPass does not support it yet), see
-    // https://github.com/singpass/myinfobiz-demo-app/blob/master/start.bat for more info.
-    router.use('/demo/api/callback', async (req, res, next) => {
+    // https://github.com/singpass/myinfobiz-demo-app-v3/blob/main/config/config.js for more info.
+    router.use('/callback', async (req, res, next) => { // ideally this would be /demo/api/myinfo-business/assert
         // req.query = {
         //     code: '78e0ab02f59464dfaa6b2ec052a66d5b499906a6',
         //     state: 'myInfoBusinessRelayState'
         // }
         let code = req.query.code;
-        helper.logInfo(req, req.path, req.query);
+        helper.logInfo(req, req.originalUrl, req.query);
 
         let accessToken = '';
         let result = null;
