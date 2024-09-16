@@ -204,7 +204,7 @@ module.exports = (function () {
     // Full URL for this route is the value for DEMO_MYINFO_BUSINESS_ASSERT_ENDPOINT env var in .env
     // Full URL must be http://localhost:3001/callback else will not work with MyInfo Business online test server
     // (cos local MockPass does not support it yet), see
-    // https://github.com/singpass/myinfobiz-demo-app-v3/blob/main/config/config.js for more info.
+    // https://github.com/singpass/myinfobiz-demo-app/blob/master/start.sh for more info.
     router.use('/callback', async (req, res, next) => { // ideally this would be /demo/api/myinfo-business/assert
         // req.query = {
         //     code: '78e0ab02f59464dfaa6b2ec052a66d5b499906a6',
@@ -229,34 +229,37 @@ module.exports = (function () {
             result = null;
         }
 
+        let nric = '';
+        let name = '';
         let uen = '';
-        let username = '';
-        let info = null;
+        let myinfo = null;
         if (result) {
+            nric = result?.person?.uinfin?.value;
+            name = result?.person?.name?.value;
             uen = result?.entity?.['basic-profile']?.uen?.value;
-            username = result?.person?.uinfin?.value;
-            info = {};
+
+            myinfo = {};
             Object.keys(result?.person).forEach((attribute) => {
                 if ('uinfin' === attribute) {
                     return;
                 }
 
                 if ('mobileno' === attribute) {
-                    info[attribute] = (result.person[attribute]?.prefix?.value || '')
+                    myinfo[attribute] = (result.person[attribute]?.prefix?.value || '')
                         + (result.person[attribute]?.areacode?.value || '')
                         + (result.person[attribute]?.nbr?.value || '');
                 } else {
-                    info[attribute] = result.person[attribute].value;
+                    myinfo[attribute] = result.person[attribute].value;
                 }
-
             });
         }
 
         let html = helper.render(req, layoutTemplate, {
             user: {
+                nric: nric,
+                name: name,
                 uen: uen,
-                username: username,
-                info: info,
+                myinfo: myinfo,
             },
         });
 

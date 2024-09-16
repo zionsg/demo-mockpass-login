@@ -1,13 +1,13 @@
 // Import modules
 const crypto = require('crypto');
 const fs = require('fs');
+const helper = require(process.env.DEMO_ROOT + 'src/helper.js');
 const http = require('http');
 const https = require('https');
 const jose = require('node-jose');
-const jwt = require('jsonwebtoken');
 
 /**
- * MyInfo Business client
+ * MyInfo Business client (v2 API)
  *
  * Adapted from https://github.com/opengovsg/myinfo-gov-client/blob/develop/src/MyInfoGovClient.class.ts
  * to use with MyInfo Business.
@@ -20,14 +20,6 @@ const jwt = require('jsonwebtoken');
  */
 module.exports = (function (config) {
     /**
-     * @callback LoggerCallback
-     * @param {string="error","info","debug"} severityLevel - Log severity level as per RFC 5424.
-     * @param {string} message - Log message.
-     * @param {(null|Error|object)} result - Error or result if any.
-     * @returns {void}
-     */
-
-    /**
      * Self reference - all public properties/methods stored here & returned as public interface.
      *
      * @public
@@ -35,10 +27,10 @@ module.exports = (function (config) {
      * @property {object} config - Configuration.
      * @property {boolean} config.useDemoDefaults=false - Use demo default values without having to
      *     specify the other config params.
-     * @property {string} config.clientId - Client ID provided by MyInfo, also known as App ID.
-     * @property {string} config.clientSecret - Client secret provided by MyInfo.
      * @property {string} config.redirectEndpoint - Endpoint to which user should be redirected
      *     after login.
+     * @property {string} config.clientId - Client ID provided by MyInfo, also known as App ID.
+     * @property {string} config.clientSecret - Client secret provided by MyInfo.
      * @property {string} config.clientPrivateKey - RSA-SHA256 private key, which must correspond
      *     with public key provided to MyInfo during the onboarding process.
      * @property {string} config.myInfoPublicKey - MyInfo server's public key for verifying
@@ -53,33 +45,18 @@ module.exports = (function (config) {
         config: Object.assign(
             {
                 useDemoDefaults: false,
+                redirectEndpoint: '',
                 clientId: '',
                 clientSecret: '',
-                redirectEndpoint: '',
                 clientPrivateKey: '',
                 myInfoPublicKey: '',
                 myInfoApiBaseUrl: '',
-                logger: function (severityLevel, message, result) {
-                    let stackLevel = 2;
-                    let caller = ((new Error()).stack.split('at '))[stackLevel].trim();
-
-                    console.log( // eslint-disable-line no-console
-                        '[' + (new Date()).toISOString() + `] [${severityLevel.toString().toUpperCase()}] `
-                        + `${caller} - ${message}`,
-                        result
-                    );
-                },
             },
             config || {}
         ),
     };
 
-    /** @type {string} Constants for log levels. */
-    const LOG_DEBUG = 'debug';
-    const LOG_ERROR = 'error';
-    const LOG_INFO = 'info';
-
-    /** @type {string} Constants for MyInfo endpoints. */
+    /** @type {string} Constants for MyInfo Biz endpoints. */
     const ENDPOINT_AUTHORISE = 'authorise';
     const ENDPOINT_ENTITY_PERSON = 'entity-person';
     const ENDPOINT_TOKEN = 'token';
@@ -115,6 +92,7 @@ module.exports = (function (config) {
      * Retrieves the access token from the Token endpoint
      *
      * @public
+     * @link Adapted from callTokenApi() in https://github.com/singpass/myinfobiz-demo-app/blob/master/routes/index.js
      * @param {string} authCode - Authorization code provided to the redirect endpoint.
      * @param {string} relayState - State to be forwarded to the redirect endpoint via query params.
      * @returns {string} The access token as a JWT (JSON Web Token).
@@ -141,13 +119,13 @@ module.exports = (function (config) {
         try {
             response = await sendHttpRequest(postUrl, 'POST', postParams, headers);
         } catch (err) {
-            self.config.logger(LOG_ERROR, err.message, err);
+            helper.logError(null, err);
             throw err;
         }
 
         if (!response?.access_token || typeof response.access_token !== 'string') {
             let msg = 'Missing access token in response.';
-            self.config.logger(LOG_ERROR, msg, response);
+            helper.logError(null, msg, response);
             throw new Error(msg);
         }
 
@@ -166,7 +144,7 @@ module.exports = (function (config) {
      * @throws {Error} Throws if MyInfo returns a non-200 response.
      */
     self.getEntityPerson = async function (accessToken, requestedAttributes) {
-        let uenUuid = extractUenUuid(accessToken);
+        let uenUuid = await extractUenUuid(accessToken);
         if (!uenUuid) {
             throw new Error('Unable to extract UEN/UUID from access token.');
         }
@@ -188,12 +166,12 @@ module.exports = (function (config) {
             // Don't parse response into JSON object
             response = await sendHttpRequest(`${url}?` + generateQueryString(params), 'GET', null, headers, true);
         } catch (err) {
-            self.config.logger(LOG_ERROR, err.message, err);
+            helper.logError(null, err);
             throw err;
         }
 
         let jws = await decryptJwe(response);
-        let decoded = verifyJws(jws);
+        let decoded = await verifyJws(jws);
 
         return decoded;
     };
@@ -216,6 +194,9 @@ module.exports = (function (config) {
      */
     async function decryptJwe(jwe) {
         return new Promise((resolve, reject) => {
+            // See splitting of JWE parts when calling securityHelper.decryptJWE() in
+            // https://github.com/singpass/myinfobiz-demo-app/blob/master/routes/index.js and how
+            // they correspond to the method signature
             let jweParts = (jwe || '').split('.');
             let header = jweParts[0];
             let encryptedKey = jweParts[1];
@@ -244,12 +225,12 @@ module.exports = (function (config) {
                             resolve(jwt);
                         })
                         .catch((err) => {
-                            self.config.logger(LOG_ERROR, err.message, err);
+                            helper.logError(null, err);
                             reject(err);
                         });
                 })
                 .catch((err) => {
-                    self.config.logger(LOG_ERROR, err.message, err);
+                    helper.logError(null, err);
                     reject(err);
                 });
         });
@@ -262,14 +243,14 @@ module.exports = (function (config) {
      * @link Adapted from callEntityPersonAPI() in
      *     https://github.com/singpass/myinfobiz-demo-app/blob/master/routes/index.js
      * @param {string} accessToken
-     * @returns {(null|object)} Null returned if error. Format of object:
+     * @returns {(Promise<null>|Promise<object>)} Null returned if error. Format of object:
      *     {
      *         uen: '12345678A',
      *         uuid: '499bb4c4-7462-0716-41ac-71fcb021a548'
      *     }
      */
-    function extractUenUuid(accessToken) {
-        let decoded = verifyJws(accessToken);
+    async function extractUenUuid(accessToken) {
+        let decoded = await verifyJws(accessToken);
         if (!decoded?.sub) {
             return null;
         }
@@ -301,10 +282,10 @@ module.exports = (function (config) {
             {}, // must assign to empty object else urlParams will be modified
             urlParams || {},
             {
-                signature_method: 'RS256',
-                nonce: nonce,
-                timestamp: timestamp,
                 app_id: self.config.clientId,
+                nonce: nonce,
+                signature_method: 'RS256',
+                timestamp: timestamp,
             }
         );
         let paramString = generateQueryString(authParams, false);
@@ -383,7 +364,7 @@ module.exports = (function (config) {
                         try {
                             parsedBody = JSON.parse(rawBody);
                         } catch (err) {
-                            self.config.logger(LOG_ERROR, 'Could not parse body into JSON', rawBody);
+                            helper.logError(null, 'Could not parse body into JSON', rawBody);
                             reject(err);
                         }
 
@@ -394,7 +375,7 @@ module.exports = (function (config) {
 
             // Error handler
             request.on('error', (err) => {
-                self.config.logger(LOG_ERROR, err.message, err);
+                helper.logError(null, err);
                 reject(err);
             });
 
@@ -420,7 +401,7 @@ module.exports = (function (config) {
      * @link From verifyJWS() in https://github.com/singpass/myinfobiz-demo-app/blob/master/lib/securityHelper.js
      *     which in turn is from https://api.singpass.gov.sg/library/myinfobiz/developers/tutorial3
      * @param {string} jws
-     * @returns {(null|object)} Null returned if error. Format of object:
+     * @returns {(Promise<null>|Promise<object>)} Null returned if error. Format of object:
      *     {
      *         sub: '12345678A_499bb4c4-7462-0716-41ac-71fcb021a548',
      *         jti: 'kgHQtzZhQflRbEXVgBnBK6Kl5DIznY9g6v2bgQl3',
@@ -437,16 +418,30 @@ module.exports = (function (config) {
      *         exp: 1662721823
      *    }
      */
-    function verifyJws(jws) {
+    async function verifyJws(jws) {
+        let keyStore = null;
+        let result = null;
         let decoded = null;
+
         try {
-            decoded = jwt.verify(jws, self.config.myInfoPublicKey, {
-                algorithms: ['RS256'],
-                ignoreNotBefore: true // ignore notbefore check cos it gives errors sometimes if the call is too fast
-            });
+            keyStore = await jose.JWK.asKey(self.config.myInfoPublicKey, 'pem');
         } catch (err) {
-            self.config.logger(LOG_ERROR, err.message, err);
-            decoded = null;
+            helper.logError(null, err);
+            return null;
+        }
+
+        try {
+            result = await jose.JWS.createVerify(keyStore).verify(jws);
+        } catch (err) {
+            helper.logError(null, err);
+            return null;
+        }
+
+        try {
+            decoded = JSON.parse(Buffer.from(result.payload).toString());
+        } catch (err) {
+            helper.logError(null, err);
+            return null;
         }
 
         return decoded;
@@ -457,18 +452,23 @@ module.exports = (function (config) {
         if (self.config.useDemoDefaults) {
             // MockPass does not support MyInfo Business at this point of time.
             // The MyInfo Business online test server only responds to specific credentials and certificates,
-            // namely those in https://github.com/singpass/myinfobiz-demo-app-v3/blob/main/config/config.js
-            // hence using them here. Note that `npm install https://github.com/singpass/myinfobiz-demo-app-v3`
-            // installs to `node_modules/myinfo-demo-app` not `node_modules/myinfobiz-demo-app-v3`.
-            let clientCertPath = process.env.DEMO_ROOT + 'node_modules/myinfo-demo-app/cert';
-            let mockpassCertPath = process.env.MOCKPASS_ROOT + 'static/certs';
+            // namely those in https://github.com/singpass/myinfobiz-demo-app/blob/master/start.sh
+            // hence using them here. Note that `npm install https://github.com/singpass/myinfobiz-demo-app`
+            // installs to `node_modules/myinfo-tutorial-app` not `node_modules/myinfobiz-demo-app`.
+            let certPath = process.env.DEMO_ROOT + 'node_modules/myinfo-tutorial-app/ssl';
+
+            // Cannot use staging-myinfo-public-cert.pem in certPath as that is outdated and will cause "No key found"
+            // error in verifyJWS(). Using new X.509 certificate (effective from 15 Aug 2024) downloaded from
+            // https://partnersupport.singpass.gov.sg/hc/en-sg/articles/32438585928601--14-May-2024-Renewal-of-X-509-Certificates-for-Myinfo-V3-Myinfo-business-and-Verify-API
+            let updatedMyInfoPublicCertPath = process.env.DEMO_ROOT
+                + 'src/certificates/pub.stg.new.consent.myinfo.gov.sg.cer';
 
             self.config = Object.assign(self.config, {
+                redirectEndpoint: process.env.DEMO_MYINFO_BUSINESS_ASSERT_ENDPOINT,
                 clientId: 'STG2-MYINFOBIZ-SELF-TEST',
                 clientSecret: '44d953c796cccebcec9bdc826852857ab412fbe2',
-                redirectEndpoint: process.env.DEMO_MYINFO_BUSINESS_ASSERT_ENDPOINT,
-                clientPrivateKey: fs.readFileSync(`${clientCertPath}/your-sample-app-signing-private-key.pem`),
-                myInfoPublicKey: fs.readFileSync(`${mockpassCertPath}/spcp.crt`),
+                clientPrivateKey: fs.readFileSync(`${certPath}/your-sample-app-private-key.pem`, 'utf8'),
+                myInfoPublicKey: fs.readFileSync(updatedMyInfoPublicCertPath, 'utf8'),
                 // not using sandbox.api.myinfo.gov.sg cos that does not return encrypted response like production
                 myInfoApiBaseUrl: 'https://test.api.myinfo.gov.sg/biz/v2',
             });
@@ -476,23 +476,18 @@ module.exports = (function (config) {
             return;
         }
 
-        // Ensure logger is always a function to reduce checks each time it is used
-        if (null === self.config.logger) {
-            self.config.logger = function (severityLevel, message, error) {}; // do nothing
-        }
-
         // Check that required config params are set
         Object.keys(self.config).forEach((key) => {
             if (!self.config[key] && key !== 'useDemoDefaults') {
                 let msg = `Config parameter "${key}" cannot be empty.`;
-                self.config.logger(LOG_ERROR, msg);
+                helper.logError(null, msg);
                 throw new Error(msg);
             }
         });
 
         // Sanitize config params
         ['clientPrivateKey', 'myInfoPublicKey'].forEach((key) => {
-            self.config[key] = self.config[key]?.toString().replace(/\n$/, '') || '';
+            self.config[key] = self.config[key]?.toString().replace(/\n$/, '') || ''; // remove trailing newline if any
         });
         if ('/' === self.config.myInfoApiBaseUrl[self.config.myInfoApiBaseUrl.length - 1]) {
             // Remove trailing slash if any

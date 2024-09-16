@@ -3,7 +3,7 @@ const { MyInfoGovClient } = require('@opengovsg/myinfo-gov-client');
 const fs = require('fs');
 
 /**
- * MyInfo Personal client
+ * MyInfo Personal client (v3 API)
  *
  * Sample JSON result from MyInfoGovClient.getPerson():
  *     {

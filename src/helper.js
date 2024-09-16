@@ -92,8 +92,11 @@ module.exports = (function () {
         }
 
         // Prepend timestamp, severity level and application name
+        let stackLevel = 3;
+        let caller = ((new Error()).stack.split('at '))[stackLevel].trim();
         messages.unshift(
-            '[' + (new Date()).toISOString() + '] [' + severityLevel.toUpperCase() + '] DEMO -'
+            '[' + (new Date()).toISOString() + '] [' + severityLevel.toUpperCase() + '] '
+            + `[DEMO] [${caller}]`
         );
 
         console.log(...messages); // eslint-disable-line no-console

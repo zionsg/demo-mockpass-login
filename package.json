@@ -34,7 +34,7 @@
     "express": "4.21.0",
     "jsonwebtoken": "9.0.2",
     "mustache": "4.2.0",
-    "myinfo-demo-app": "github:singpass/myinfobiz-demo-app-v3#d083f87",
+    "myinfo-tutorial-app": "github:singpass/myinfobiz-demo-app#27eaa04",
     "node-jose": "2.2.0",
     "nodemon": "3.1.4"
   },
