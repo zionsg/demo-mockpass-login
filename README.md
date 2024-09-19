@@ -17,10 +17,12 @@ of the repository. Shell commands are all run from the root of the repository.
 - [A Hitchhiker’s Guide to Identity Providers (Singapore Government Edition)](https://medium.com/singapore-gds/a-hitchhikers-guide-to-identity-providers-singapore-government-edition-bebfdf354a68)
 - [MockPass - a mock SingPass/CorpPass server for testing in development](https://medium.com/open-government-products/mockpass-a-mock-singpass-corppass-server-for-testing-in-development-a583193c898c)
 - [SingPass Developer Guide](https://api.singpass.gov.sg/developers)
+    + [Partner Support Center](https://partnersupport.singpass.gov.sg/)
+        * Check this site for onboarding process and API specifications.
     + [Auth0 Integration with Singpass](https://auth0.com/blog/auth0-integration-with-singpass/)
 - [CorpPass](https://www.developer.tech.gov.sg/products/categories/digital-identity/corppass/overview.html)
-    + [Corppass Authorisation API Reference v2.0](https://partnersupport.corppass.gov.sg/hc/en-sg/articles/33277121728921-Corppass-Authorisation-API-Reference-v2-0-beta-version)
-    + [Corppass Authorisation API Reference v1.5](https://partnersupport.corppass.gov.sg/hc/en-sg/articles/33273263016217-Corppass-Authorisation-API-Reference-v1-5)
+    + [Partner Support Center](https://partnersupport.corppass.gov.sg/)
+        * Check this site for onboarding process and API specifications.
 - [MyInfo](https://api.singpass.gov.sg/library/myinfo/developers/overview)
     + [MyInfo API v3](https://public.cloud.myinfo.gov.sg/myinfo/api/myinfo-kyc-v3.2.html)
     + [MyInfo API v4](https://public.cloud.myinfo.gov.sg/myinfo/api/myinfo-kyc-v4.0.html)
