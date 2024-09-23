@@ -6,7 +6,7 @@ const fs = require('fs');
  * CorpPass client (Post-NDI)
  *
  * @param {object} config - See https://github.com/GovTechSG/singpass-myinfo-oidc-helper/blob/master/README.md#corppass-post-ndi
- * @returns {SPCPAuthClient}
+ * @returns {Corppass.NdiOidcHelper}
  */
 module.exports = (function (config) {
     // There are 2 sets of keys in the JSON file used by MockPass, one used for encrypting, the other for signing,
