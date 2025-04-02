@@ -25,7 +25,7 @@
     "test": "echo 'Tests not implemented.'"
   },
   "dependencies": {
-    "@govtechsg/singpass-myinfo-oidc-helper": "8.4.1",
+    "@govtechsg/singpass-myinfo-oidc-helper": "8.4.6",
     "@opengovsg/mockpass": "4.3.4",
     "@opengovsg/myinfo-gov-client": "4.1.2",
     "cookie-parser": "1.4.6",
