@@ -24,6 +24,10 @@
     "stop": "docker compose down",
     "test": "echo 'Tests not implemented.'"
   },
+  "engines": {
+    "npm": ">=10.9.2",
+    "node": ">=22.13.0"
+  },
   "dependencies": {
     "@govtechsg/singpass-myinfo-oidc-helper": "8.4.6",
     "@opengovsg/mockpass": "4.3.4",

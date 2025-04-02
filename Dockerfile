@@ -2,12 +2,17 @@
 # Dockerfile
 ##
 
-# Debian Linux. Node.js provides Tier 1 support for Debian Linux but only experimental support for Alpine Linux
-FROM node:18.20.4-bullseye-slim
+# Debian Linux
+FROM node:22.13.0-bookworm-slim
 
 # Set environment variables. NODE_ENV should always be set to production
 # else `npm install` will install devDependencies.
 ENV DEBIAN_FRONTEND=noninteractive NODE_ENV=production
+
+# Fix "error:0308010C:digital envelope routines::unsupported" in require('crypto').createCipheriv()
+# due to Node.js 17 and later using OpenSSL 3.0 which has breaking changes. Needed for encryption in Node.js to work.
+# See https://bobbyhadz.com/blog/react-error-digital-envelope-routines-unsupported for more info.
+ENV NODE_OPTIONS="--openssl-legacy-provider"
 
 # Install system packages: cURL (used in healthcheck), dumb-init (used in Dockerfile), nano/vim (editors)
 RUN apt-get --yes update \

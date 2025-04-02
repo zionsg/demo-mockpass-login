@@ -43,30 +43,29 @@ of the repository. Shell commands are all run from the root of the repository.
     + [MyInfo Connector NodeJS](https://github.com/singpass/myinfo-connector-v4-nodejs)
 
 ## Requirements
-- [Docker Engine](https://docs.docker.com/engine/release-notes/) >= 20.10.7
-- [Docker Compose](https://docs.docker.com/compose/release-notes/) >= 2.14.0
+- [Docker Engine](https://docs.docker.com/engine/release-notes/) >= 27.3.1
+- [Docker Compose](https://docs.docker.com/compose/release-notes/) >= 2.29.7
     + Docker Compose v3 not used as it does not support the `extends` key.
     + Docker Compose v1 not used as it does not support the `depends_on` key.
     + Note that Docker Compose v2 uses the `docker compose` command (without
       hyphen) via the Compose plugin for Docker whereas Docker Compose v1 uses
       the `docker-compose` command (with hyphen).
         * [Install Docker Compose v2 plugin on Ubuntu 22.04](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-compose-on-ubuntu-22-04)
-    + Version 3.8 is currently used for the Compose file format.
-- [Node.js](https://nodejs.org/) >= 18.20.4 (includes npm 10.7.0)
+- [Node.js](https://nodejs.org/) >= 22.13.0 (includes npm 10.9.2)
     + `?.` optional chaining and `??` nullish coalescing operator supported from
       Node.js 14 onwards. `btoa()` supported from Node.js 16 onwards.
-    + Node.js 18 is a LTS release. As of 25 Oct 2022, its status is Active LTS
-      with Maintenance LTS status starting from 18 Oct 2023. End-of-life is
-      30 Apr 2025.
+    + Node.js 22 is a LTS release. As of 08 Jan 2025, its status is Active LTS
+      with Maintenance LTS status starting from 21 Oct 2025. End-of-life is
+      30 Apr 2027.
     + For development purposes, it is recommended that
       [nvm](https://nodejs.org/en/download/package-manager/#nvm) be used to
       install Node.js and npm as it can switch between multiple versions
-      if need be for different projects, e.g. `nvm install 18.20.4` to install
-      a specific version and `nvm alias default 18.20.4` to set the default
+      if need be for different projects, e.g. `nvm install 22.13.0` to install
+      a specific version and `nvm alias default 22.13.0` to set the default
       version.
-    + For the base Docker image, `node:18.20.4-bullseye-slim` is used.
-      At this time, the stable release for Debian is version 11, codenamed
-      Bullseye, released 2021-08-14 (see https://wiki.debian.org/DebianReleases
+    + For the base Docker image, `node:22.13.0-bookworm-slim` is used.
+      As of 08 Jan 2025, the stable release for Debian is version 12, codenamed
+      Bookworm, released 2023-06-10 (see https://www.debian.org/releases/
       for more info). Alpine Linux is not used as Node.js only provides
       experimental support for it, versus Tier 1 support for Debian (see
       https://github.com/nodejs/node/blob/master/BUILDING.md#platform-list
@@ -140,10 +139,9 @@ of the repository. Shell commands are all run from the root of the repository.
                 - type: bind
                   source: /mnt/c/Users/Me/localhost/www/demo-mockpass-login/tmp
                   target: /var/lib/app/tmp
-
                 # Read from local copy to allow debugging
                 - type: bind
-                  source: /home/zion/localhost/www/demo-mockpass-login/node_modules/@opengovsg/myinfo-gov-client
+                  source: /mnt/c/Users/Me/localhost/www/demo-mockpass-login/node_modules/@opengovsg/myinfo-gov-client
                   target: /var/lib/app/node_modules/@opengovsg/myinfo-gov-client
               # This command uses Nodemon which is listed as a production dependency
               # cos container does not install devDependencies and node_modules are
