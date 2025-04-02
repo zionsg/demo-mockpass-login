@@ -203,7 +203,7 @@ module.exports = (function () {
 
     // Full URL for this route is the value for DEMO_MYINFO_BUSINESS_ASSERT_ENDPOINT env var in .env
     // Full URL must be http://localhost:3001/callback else will not work with MyInfo Business online test server
-    // (cos local MockPass does not support it yet), see
+    // (cos local MockPass does not support it yet), see MYINFO_APP_REDIRECT_URL env var in
     // https://github.com/singpass/myinfobiz-demo-app/blob/master/start.sh for more info.
     router.use('/callback', async (req, res, next) => { // ideally this would be /demo/api/myinfo-business/assert
         // req.query = {
