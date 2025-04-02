@@ -15,7 +15,9 @@ of the repository. Shell commands are all run from the root of the repository.
 ## References
 - Relevant articles:
     + [18 Mar 2025 - New Staging Singpass App Download Process](https://partnersupport.singpass.gov.sg/hc/en-sg/articles/44616927370777-18-Mar-2025-New-Staging-Singpass-App-Download-Process)
-    + [14 May 2024: Renewal of X.509 Certificates for Myinfo V3, Myinfo business, and Verify API](https://partnersupport.singpass.gov.sg/hc/en-sg/articles/32438585928601--14-May-2024-Renewal-of-X-509-Certificates-for-Myinfo-V3-Myinfo-business-and-Verify-API)
+    + [18 Nov 2024 Singpass Onboarding Resumption – Briefing Materials Available!](https://partnersupport.singpass.gov.sg/hc/en-sg/articles/39996163746585--18-Nov-2024-Singpass-Onboarding-Resumption-Briefing-Materials-Available)
+        * This announces the replacement of Myinfo v3/v4 with the Singpass `/userinfo` endpoint,
+          as well as the replacement of Myinfo business v1/v2 with Corppass (endpoint not mentioned).
     + [Digital Identity](https://www.developer.tech.gov.sg/products/categories/digital-identity/)
     + [A Hitchhiker's Guide to Identity Providers (Singapore Government Edition)](https://medium.com/singapore-gds/a-hitchhikers-guide-to-identity-providers-singapore-government-edition-bebfdf354a68)
     + [MockPass - a mock SingPass/CorpPass server for testing in development](https://medium.com/open-government-products/mockpass-a-mock-singpass-corppass-server-for-testing-in-development-a583193c898c)
@@ -23,7 +25,6 @@ of the repository. Shell commands are all run from the root of the repository.
 - [Singpass Developer Portal](https://developer.singpass.gov.sg/)
     + [Singpass Developer Docs](https://docs.developer.singpass.gov.sg/docs) which includes
       onboarding checklist.
-    + MyInfo
 - [Corppass Developer Portal](https://developer.corppass.gov.sg/)
     + [Corppass Developer Docs](https://docs.corppass.gov.sg/) which includes onboarding checklist
       under the user guide.
