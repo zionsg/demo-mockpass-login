@@ -37,26 +37,32 @@
         <p>
           Welcome Back
 
-          {{#user.nric}}
+          {{#person}}
             <p>
-              NRIC/FIN {{user.nric}}
-              {{#user.name}}({{user.name}}){{/user.name}}
+              NRIC/FIN: {{person.nric}}<br>
+              Name: {{person.name}}
             </p>
-          {{/user.nric}}
+          {{/person}}
 
-          {{#user.uen}}
+          {{#entity}}
             <p>
-              Organisation UEN: {{user.uen}}
+              Organisation UEN: {{entity.uen}}<br>
+              Organisation Name: {{entity.name}}
             </p>
-          {{/user.uen}}
+          {{/entity}}
 
-          {{#user.myinfo}}
+          {{#myinfo}}
             <p>
               Name: {{name}}<br>
               Email: {{email}}<br>
               Mobile: {{mobileno}}<br>
             </p>
-          {{/user.myinfo}}
+          {{/myinfo}}
+
+          {{#myinfo_result_json}}
+            MyInfo result:
+            <pre>{{myinfo_result_json}}</pre>
+          {{/myinfo_result_json}}
         </p>
 
         <p><a href="/demo/web/login">&lt; Back to Login Page</a></p>

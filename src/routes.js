@@ -26,11 +26,15 @@ module.exports = (function () {
     let singPassClient = new SingPassClient({ redirectUri: redirectUri });
     let corpPassClient = new CorpPassClient({ redirectUri: redirectUri });
     let myInfoPersonalClient = new MyInfoPersonalClient();
-    let myInfoPersonalRequestedAttributes = ['name', 'email', 'mobileno'];
+    let myInfoPersonalRequestedAttributes = ['name', 'email', 'mobileno'].sort();
     let myInfoBusinessClient = new MyInfoBusinessClient({
         useDemoDefaults: true,
     });
-    let myInfoBusinessRequestedAttributes = ['basic-profile', 'uinfin', 'name', 'email', 'mobileno'];
+    let myInfoBusinessRequestedAttributes = [
+        // See https://public.cloud.myinfo.gov.sg/myinfobiz/myinfo-biz-specs-v2.0.html#section/Authentication
+        'basic-profile', 'previous-names', 'previous-uens', 'addresses', // business info
+        'uinfin', 'name', 'email', 'mobileno', // employee info
+    ].sort();
 
     // The very 1st middleware
     router.use((req, res, next) => {
@@ -96,6 +100,7 @@ module.exports = (function () {
         // we will receive the auth code from MockPass server
         let code = req.query.code;
         let state = req.query.state;
+        let templateVars = {};
         if (code && state) { // data passed back from logging in on MockPass website
             let tokenResponse = null;
             let idTokenPayload = null;
@@ -107,8 +112,8 @@ module.exports = (function () {
                     idTokenPayload = await singPassClient.getIdTokenPayload(tokenResponse);
                     userInfo = await singPassClient.extractNricAndUuidFromPayload(idTokenPayload);
 
-                    req.user = userInfo;
-                    helper.logInfo(req, 'User authenticated with SingPass', req.user, idTokenPayload);
+                    templateVars.person = userInfo;
+                    helper.logInfo(req, 'User authenticated with SingPass', { idTokenPayload, userInfo });
                 } catch (err) {
                     helper.logError(
                         req,
@@ -124,11 +129,14 @@ module.exports = (function () {
                     userInfo = await corpPassClient.extractInfoFromIdTokenSubject(idTokenPayload);
 
                     // Interestingly, the idTokenPayload for CorpPass contains userInfo and entityInfo, hence using it
-                    req.user = Object.assign(userInfo, {
+                    templateVars.person = Object.assign({}, userInfo, {
                         name: idTokenPayload.userInfo.CPUID_FullName,
-                        uen: idTokenPayload.entityInfo.CPEntID,
                     });
-                    helper.logInfo(req, 'User authenticated with CorpPass', req.user, idTokenPayload);
+                    templateVars.entity = {
+                        uen: idTokenPayload.entityInfo.CPEntID,
+                        name: '', // not provided in idTokenPayload
+                    };
+                    helper.logInfo(req, 'User authenticated with CorpPass', { idTokenPayload, userInfo });
                 } catch (err) {
                     helper.logError(
                         req,
@@ -140,7 +148,7 @@ module.exports = (function () {
             }
         }
 
-        let html = helper.render(req, layoutTemplate);
+        let html = helper.render(req, layoutTemplate, templateVars);
         res.status(200).send(html);
     });
 
@@ -192,10 +200,11 @@ module.exports = (function () {
         }
 
         let html = helper.render(req, layoutTemplate, {
-            user: {
+            person: {
                 nric: nric,
-                myinfo: myinfo,
             },
+            myinfo: myinfo,
+            myinfo_result_json: JSON.stringify(result, null, 2),
         });
 
         res.status(200).send(html);
@@ -231,12 +240,15 @@ module.exports = (function () {
 
         let nric = '';
         let name = '';
-        let uen = '';
+        let entity = null;
         let myinfo = null;
         if (result) {
             nric = result?.person?.uinfin?.value;
             name = result?.person?.name?.value;
-            uen = result?.entity?.['basic-profile']?.uen?.value;
+            entity = {
+                uen: result?.entity?.['basic-profile']?.uen?.value,
+                name: result?.entity?.['basic-profile']?.['entity-name']?.value,
+            };
 
             myinfo = {};
             Object.keys(result?.person).forEach((attribute) => {
@@ -255,12 +267,13 @@ module.exports = (function () {
         }
 
         let html = helper.render(req, layoutTemplate, {
-            user: {
+            person: {
                 nric: nric,
                 name: name,
-                uen: uen,
-                myinfo: myinfo,
             },
+            entity: entity,
+            myinfo: myinfo,
+            myinfo_result_json: JSON.stringify(result, null, 2),
         });
 
         res.status(200).send(html);
