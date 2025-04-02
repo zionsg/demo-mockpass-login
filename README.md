@@ -13,17 +13,22 @@ of the repository. Shell commands are all run from the root of the repository.
 - [Installation](#installation)
 
 ## References
-- [14 May 2024: Renewal of X.509 Certificates for Myinfo V3, Myinfo business, and Verify API](https://partnersupport.singpass.gov.sg/hc/en-sg/articles/32438585928601--14-May-2024-Renewal-of-X-509-Certificates-for-Myinfo-V3-Myinfo-business-and-Verify-API)
-- [A Hitchhiker’s Guide to Identity Providers (Singapore Government Edition)](https://medium.com/singapore-gds/a-hitchhikers-guide-to-identity-providers-singapore-government-edition-bebfdf354a68)
-- [MockPass - a mock SingPass/CorpPass server for testing in development](https://medium.com/open-government-products/mockpass-a-mock-singpass-corppass-server-for-testing-in-development-a583193c898c)
-- [SingPass Developer Guide](https://api.singpass.gov.sg/developers)
-    + [Partner Support Center](https://partnersupport.singpass.gov.sg/)
-        * Check this site for onboarding process and API specifications.
-    + [Auth0 Integration with Singpass](https://auth0.com/blog/auth0-integration-with-singpass/)
-- [CorpPass](https://www.developer.tech.gov.sg/products/categories/digital-identity/corppass/overview.html)
-    + [Partner Support Center](https://partnersupport.corppass.gov.sg/)
-        * Check this site for onboarding process and API specifications.
+- Relevant articles:
+    + [18 Mar 2025 - New Staging Singpass App Download Process](https://partnersupport.singpass.gov.sg/hc/en-sg/articles/44616927370777-18-Mar-2025-New-Staging-Singpass-App-Download-Process)
+    + [14 May 2024: Renewal of X.509 Certificates for Myinfo V3, Myinfo business, and Verify API](https://partnersupport.singpass.gov.sg/hc/en-sg/articles/32438585928601--14-May-2024-Renewal-of-X-509-Certificates-for-Myinfo-V3-Myinfo-business-and-Verify-API)
+    + [Digital Identity](https://www.developer.tech.gov.sg/products/categories/digital-identity/)
+    + [A Hitchhiker's Guide to Identity Providers (Singapore Government Edition)](https://medium.com/singapore-gds/a-hitchhikers-guide-to-identity-providers-singapore-government-edition-bebfdf354a68)
+    + [MockPass - a mock SingPass/CorpPass server for testing in development](https://medium.com/open-government-products/mockpass-a-mock-singpass-corppass-server-for-testing-in-development-a583193c898c)
+    + [Auth0 Integration with Singpass (2021)](https://auth0.com/blog/auth0-integration-with-singpass/)
+- [Singpass Developer Portal](https://developer.singpass.gov.sg/)
+    + [Singpass Developer Docs](https://docs.developer.singpass.gov.sg/docs) which includes
+      onboarding checklist.
+    + MyInfo
+- [Corppass Developer Portal](https://developer.corppass.gov.sg/)
+    + [Corppass Developer Docs](https://docs.corppass.gov.sg/) which includes onboarding checklist
+      under the user guide.
 - [MyInfo](https://api.singpass.gov.sg/library/myinfo/developers/overview)
+    + [When will Myinfo v3 and Myinfo v4 be decomissioned?](https://partnersupport.singpass.gov.sg/hc/en-sg/articles/40265036685593-When-will-Myinfo-v3-and-Myinfo-v4-be-decomissioned)
     + [MyInfo API v3](https://public.cloud.myinfo.gov.sg/myinfo/api/myinfo-kyc-v3.2.html)
     + [MyInfo API v4](https://public.cloud.myinfo.gov.sg/myinfo/api/myinfo-kyc-v4.0.html)
 - [MyInfo Business](https://api.singpass.gov.sg/library/myinfobiz/developers/overview)
