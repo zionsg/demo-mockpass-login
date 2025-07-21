@@ -23,9 +23,11 @@ of the repository. Shell commands are all run from the root of the repository.
     + [MockPass - a mock SingPass/CorpPass server for testing in development](https://medium.com/open-government-products/mockpass-a-mock-singpass-corppass-server-for-testing-in-development-a583193c898c)
     + [Auth0 Integration with Singpass (2021)](https://auth0.com/blog/auth0-integration-with-singpass/)
 - [Singpass Developer Portal](https://developer.singpass.gov.sg/)
+    + [Singpass Partner Support Center](https://partnersupport.singpass.gov.sg/) where announcements can be found.
     + [Singpass Developer Docs](https://docs.developer.singpass.gov.sg/docs) which includes
       onboarding checklist.
 - [Corppass Developer Portal](https://developer.corppass.gov.sg/)
+    + [Corppass Partner Support](https://partnersupport.corppass.gov.sg/) where announcements can be found.
     + [Corppass Developer Docs](https://docs.corppass.gov.sg/) which includes onboarding checklist
       under the user guide.
 - [MyInfo](https://api.singpass.gov.sg/library/myinfo/developers/overview)
