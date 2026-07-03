@@ -22,6 +22,7 @@ of the repository. Shell commands are all run from the root of the repository.
     + [A Hitchhiker's Guide to Identity Providers (Singapore Government Edition)](https://medium.com/singapore-gds/a-hitchhikers-guide-to-identity-providers-singapore-government-edition-bebfdf354a68)
     + [MockPass - a mock SingPass/CorpPass server for testing in development](https://medium.com/open-government-products/mockpass-a-mock-singpass-corppass-server-for-testing-in-development-a583193c898c)
     + [Auth0 Integration with Singpass (2021)](https://auth0.com/blog/auth0-integration-with-singpass/)
+- [Staging Singpass App Installation Tutorial Guide](https://partnersupport.singpass.gov.sg/hc/en-sg/articles/33107472981657-Staging-Singpass-App-Installation-Tutorial-Guide)
 - [Singpass Developer Portal](https://developer.singpass.gov.sg/)
     + [Singpass Partner Support Center](https://partnersupport.singpass.gov.sg/) where announcements can be found.
     + [Singpass Developer Docs](https://docs.developer.singpass.gov.sg/docs) which includes
